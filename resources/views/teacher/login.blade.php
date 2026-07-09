@@ -41,32 +41,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('teacher.login.store') }}" class="teacher-form" style="margin-top: 24px;">
-                    @csrf
-                    <label>
-                        <span>Faculty Email</span>
-                        <input name="teacher_id" type="text" value="{{ old('teacher_id') }}" required autofocus placeholder="faculty@amis.edu.ph">
-                    </label>
-
-                    <label>
-                        <span>Portal Password</span>
-                        <input name="password" type="password" required placeholder="Password">
-                    </label>
-
-
-                    <button type="submit" class="teacher-primary-btn" style="width: 100%;">
-                        <i data-lucide="log-in"></i> Sign In
-                    </button>
-                </form>
-
-                <div class="teacher-divider" style="display: flex; align-items: center; gap: 14px; margin: 20px 0; font-size: 10.5px; font-weight: 650; color: var(--t-tertiary); text-transform: uppercase;">
-                    <style>
-                        .teacher-divider::before, .teacher-divider::after { content: ""; flex: 1; height: 1px; background: var(--s-border, #e9ebee); }
-                    </style>
-                    or continue with
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 24px;">
                     <a href="{{ route('teacher.login.microsoft.redirect') }}" style="display: flex; align-items: center; justify-content: center; gap: 12px; height: 50px; border-radius: 8px; background: #059669; color: #fff; text-decoration: none; font-size: 15px; font-weight: 600; transition: background 140ms var(--ease); box-shadow: var(--shadow-sm);" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
                         <svg viewBox="0 0 23 23" style="width: 20px; height: 20px;">
                             <path fill="#f25022" d="M1 1h10v10H1z"/>

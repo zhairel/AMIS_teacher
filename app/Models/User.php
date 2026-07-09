@@ -42,6 +42,7 @@ class User extends Authenticatable
         'last_admin_login_at',
         'account_status',
         'email_verified_at',
+        'biometric_id',
     ];
 
     /**

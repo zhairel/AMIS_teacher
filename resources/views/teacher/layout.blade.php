@@ -33,6 +33,7 @@
                     ['route' => 'teacher.grades', 'icon' => 'clipboard-list', 'label' => 'Gradebook', 'tone' => 'amber'],
                     ['route' => 'teacher.students', 'icon' => 'users', 'label' => 'Students', 'tone' => 'violet'],
                     ['route' => 'teacher.announcements', 'icon' => 'megaphone', 'label' => 'Announcements', 'tone' => 'rose'],
+                    ['route' => 'teacher.attendance', 'icon' => 'clock', 'label' => 'Attendance', 'tone' => 'emerald'],
                     ['route' => 'teacher.settings', 'icon' => 'settings', 'label' => 'Settings', 'tone' => 'indigo'],
                 ];
             @endphp
@@ -77,34 +78,36 @@
     </aside>
 
     <main class="teacher-main">
-        <header class="teacher-topbar">
-            <div class="teacher-topbar-start">
-                <div class="teacher-topbar-eyebrow">Al Munawwara Islamic School</div>
-                <h1>{{ $heading ?? 'Faculty Portal' }}</h1>
-            </div>
-            <div class="teacher-topbar-end">
-                <a href="{{ route('teacher.meetings') }}" class="teacher-icon-btn" aria-label="Meetings">
-                    <i data-lucide="calendar-clock"></i>
-                </a>
-                <a href="{{ route('teacher.announcements') }}" class="teacher-icon-btn" aria-label="Announcements">
-                    <i data-lucide="bell"></i>
-                </a>
-                <div class="teacher-topbar-divider"></div>
-                <form method="POST" action="{{ route('teacher.logout') }}" class="teacher-logout-form">
-                    @csrf
-                    <button type="submit" class="teacher-outline-btn"><i data-lucide="log-out"></i> Sign Out</button>
-                </form>
-            </div>
-        </header>
+        <div class="teacher-container">
+            <header class="teacher-topbar">
+                <div class="teacher-topbar-start">
+                    <div class="teacher-topbar-eyebrow">Al Munawwara Islamic School</div>
+                    <h1>{{ $heading ?? 'Faculty Portal' }}</h1>
+                </div>
+                <div class="teacher-topbar-end">
+                    <a href="{{ route('teacher.meetings') }}" class="teacher-icon-btn" aria-label="Meetings">
+                        <i data-lucide="calendar-clock"></i>
+                    </a>
+                    <a href="{{ route('teacher.announcements') }}" class="teacher-icon-btn" aria-label="Announcements">
+                        <i data-lucide="bell"></i>
+                    </a>
+                    <div class="teacher-topbar-divider"></div>
+                    <form method="POST" action="{{ route('teacher.logout') }}" class="teacher-logout-form">
+                        @csrf
+                        <button type="submit" class="teacher-outline-btn"><i data-lucide="log-out"></i> Sign Out</button>
+                    </form>
+                </div>
+            </header>
 
-        @if(session('success'))
-            <div class="teacher-alert">
-                <i data-lucide="check-circle"></i>
-                {{ session('success') }}
-            </div>
-        @endif
+            @if(session('success'))
+                <div class="teacher-alert">
+                    <i data-lucide="check-circle"></i>
+                    {{ session('success') }}
+                </div>
+            @endif
 
-        @yield('content')
+            @yield('content')
+        </div>
     </main>
 </div>
 

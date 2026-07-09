@@ -81,12 +81,19 @@ class TeacherPortalService
         $subject = collect($data['subjects'])->firstWhere('id', $workspaceId);
         abort_unless($subject, 404, 'Subject workspace not found.');
 
+        $selectedDate = $request->query('attendance_date', now()->toDateString());
+        $subjectAttendances = \App\Models\StudentAttendance::where('section_subject_id', $subject['section_subject_id'])
+            ->where('date', $selectedDate)
+            ->get();
+
         return $data + [
             'subject' => $subject,
             'subjectMeetings' => collect($data['meetings'])->where('subject_id', $workspaceId)->values(),
             'subjectMaterials' => collect($data['materials'])->where('subject_id', $workspaceId)->values(),
             'subjectAnnouncements' => collect($data['announcements'])->where('subject_id', $workspaceId)->values(),
             'subjectStudents' => collect($data['students'])->where('section_subject_id', $subject['section_subject_id'])->values(),
+            'attendanceDate' => $selectedDate,
+            'subjectAttendances' => $subjectAttendances,
         ];
     }
 
@@ -165,6 +172,7 @@ class TeacherPortalService
             'teacher_email' => $request->session()->get('teacher_email'),
             'title' => $dto->title,
             'body' => $dto->body,
+            'audience' => $dto->audience,
             'published_at' => $dto->date.' '.now()->format('H:i:s'),
         ]);
     }
@@ -513,7 +521,7 @@ class TeacherPortalService
             'id' => 'announcement-'.$announcement->id,
             'subject_id' => $workspaceId,
             'title' => $announcement->title,
-            'audience' => 'Assigned students',
+            'audience' => $announcement->audience ?? 'Assigned students',
             'date' => $announcement->published_at?->toDateString(),
             'body' => $announcement->body,
         ];

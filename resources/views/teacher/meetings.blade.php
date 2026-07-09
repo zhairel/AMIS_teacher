@@ -38,14 +38,40 @@
                     <th>Date</th>
                     <th>Time</th>
                     <th>Description</th>
-                    <th>Link</th>
+                    <th>Teams Link</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($meetings as $meeting)
-                    @php $subject = $subjects->firstWhere('id', $meeting['subject_id']); @endphp
+                    @php 
+                        $subject = $subjects->firstWhere('id', $meeting['subject_id']); 
+                        $dbMeetingId = str_replace('meeting-', '', $meeting['id']);
+                        $statusLower = strtolower($meeting['status']);
+                    @endphp
                     <tr>
-                        <td><span class="teacher-status-pill">{{ $meeting['status'] }}</span></td>
+                        <td>
+                            <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
+                                <span class="teacher-status-pill">{{ $meeting['status'] }}</span>
+                                @if($statusLower === 'scheduled' || $statusLower === 'draft')
+                                    <form method="POST" action="{{ route('teacher.meetings.status', $dbMeetingId) }}" style="margin:0;">
+                                        @csrf
+                                        <input type="hidden" name="status" value="live">
+                                        <button type="submit" class="teacher-primary-btn" style="padding: 2px 6px; font-size: 9px; border-radius: 4px; background-color: #10b981; border-color: #10b981; color: white; display: inline-flex; align-items: center; gap: 2px;">
+                                            <i data-lucide="play" style="width:10px; height:10px;"></i> Go Live
+                                        </button>
+                                    </form>
+                                @elseif($statusLower === 'live')
+                                    <form method="POST" action="{{ route('teacher.meetings.status', $dbMeetingId) }}" style="margin:0;">
+                                        @csrf
+                                        <input type="hidden" name="status" value="completed">
+                                        <button type="submit" class="teacher-outline-btn" style="padding: 2px 6px; font-size: 9px; border-radius: 4px; color: #ef4444; border-color: #fca5a5; background-color: #fef2f2; display: inline-flex; align-items: center; gap: 2px;">
+                                            <i data-lucide="square" style="width:10px; height:10px;"></i> End Class
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </td>
                         <td><strong>{{ $meeting['title'] }}</strong></td>
                         <td>
                             {{ $subject['name'] ?? 'No subject' }}
@@ -55,18 +81,31 @@
                         <td>{{ $meeting['time'] }}</td>
                         <td class="teacher-table-muted">{{ $meeting['agenda'] ?: 'No description added' }}</td>
                         <td>
-                            @if($meeting['link'])
-                                <a href="{{ $meeting['link'] }}" target="_blank" class="teacher-outline-btn">
-                                    <i data-lucide="external-link"></i> Open
-                                </a>
-                            @else
-                                <span>No link</span>
-                            @endif
+                            <div style="display:flex; flex-direction:column; gap:6px; min-width: 140px;">
+                                @if($meeting['link'])
+                                    <a href="{{ $meeting['link'] }}" target="_blank" class="teacher-outline-btn" style="display:inline-flex; align-items:center; gap:4px; padding: 4px 8px; font-size: 11px; border-radius: 6px; width: fit-content; text-decoration: none;">
+                                        <i data-lucide="external-link" style="width:12px; height:12px;"></i> Join Meeting
+                                    </a>
+                                @endif
+                                
+                                <form method="POST" action="{{ route('teacher.meetings.link', $dbMeetingId) }}" style="margin: 0; display: flex; gap: 4px; align-items: center;">
+                                    @csrf
+                                    <input type="url" name="link" value="{{ $meeting['link'] }}" placeholder="Teams Link" required style="padding: 4px 6px; font-size: 10px; border-radius: 6px; border: 1px solid #cbd5e1; width: 100px;">
+                                    <button type="submit" class="teacher-icon-btn" title="Save Link" style="padding: 2px;"><i data-lucide="check" style="width:12px; height:12px; color: #10b981;"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ route('teacher.meetings.delete', $dbMeetingId) }}" onsubmit="return confirm('Are you sure you want to delete this meeting?')" style="margin:0;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="teacher-icon-btn" title="Delete" style="color: #ef4444; border:none; background:none; cursor:pointer; padding:4px;"><i data-lucide="trash-2" style="width:15px; height:15px;"></i></button>
+                            </form>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             @if($subjects->isEmpty())
                                 <div style="padding: 48px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;">
                                     <div style="background-color: rgba(16, 185, 129, 0.1); border-radius: 50%; padding: 16px; display: inline-flex; align-items: center; justify-content: center;">

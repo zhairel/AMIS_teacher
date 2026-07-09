@@ -14,6 +14,7 @@ class SubjectAnnouncement extends Model
         'teacher_email',
         'title',
         'body',
+        'audience',
         'published_at',
     ];
 

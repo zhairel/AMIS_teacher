@@ -151,6 +151,7 @@ label { font-size: clamp(0.875rem, 0.84rem + 0.18vw, 1rem); }
 
 /* ---- MAIN ---- */
 .teacher-main { flex: 1; margin-left: 268px; min-width: 0; padding: 32px 36px 48px; min-height: 100vh; }
+.teacher-container { max-width: 1400px; width: 100%; margin: 0 auto; }
 
 /* Topbar */
 .teacher-topbar {
@@ -664,4 +665,18 @@ label { font-size: clamp(0.875rem, 0.84rem + 0.18vw, 1rem); }
   .teacher-login-identity strong { margin-top: 9px; font-size: 22px; }
   .teacher-login-arabic { font-size: 26px !important; margin-bottom: 7px; color: #10b981 !important; }
   .teacher-login-identity > p:not(.teacher-login-arabic) { font-size: 15px; }
+}
+
+/* Student Attendance Stateful Segmented Pill Highlight */
+.attendance-pill-label:has(input[value="Present"]:checked) {
+  background-color: rgba(16, 185, 129, 0.12);
+}
+.attendance-pill-label:has(input[value="Late"]:checked) {
+  background-color: rgba(245, 158, 11, 0.12);
+}
+.attendance-pill-label:has(input[value="Excused"]:checked) {
+  background-color: rgba(59, 130, 246, 0.12);
+}
+.attendance-pill-label:has(input[value="Absent"]:checked) {
+  background-color: rgba(239, 68, 68, 0.12);
 }
