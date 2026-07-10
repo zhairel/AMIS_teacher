@@ -128,7 +128,7 @@
                     <!-- Cut-off Pagination Navigation -->
                     <div style="display:inline-flex; align-items:center; gap:8px; border: 1px solid var(--s-border); border-radius: 8px; padding: 4px 12px; background-color: var(--s-surface-hover);">
                         <!-- Previous Period Button -->
-                        <a href="{{ route('teacher.attendance', ['my_month' => $prevMonth, 'my_year' => $prevYear, 'my_cutoff' => $prevCutoff]) }}" 
+                        <a href="{{ route('teacher.attendance', ['my_month' => $prevMonth, 'my_year' => $prevYear, 'my_cutoff' => $prevCutoff, 'biometric_id' => $myBiometricId]) }}" 
                            style="color: var(--t-primary); display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; transition: all 0.2s;"
                            title="Previous Pay Period">
                             <i data-lucide="chevrons-left" style="width: 16px; height: 16px;"></i>
@@ -150,7 +150,7 @@
                                 <i data-lucide="chevrons-right" style="width: 16px; height: 16px;"></i>
                             </span>
                         @else
-                            <a href="{{ route('teacher.attendance', ['my_month' => $nextMonth, 'my_year' => $nextYear, 'my_cutoff' => $nextCutoff]) }}" 
+                            <a href="{{ route('teacher.attendance', ['my_month' => $nextMonth, 'my_year' => $nextYear, 'my_cutoff' => $nextCutoff, 'biometric_id' => $myBiometricId]) }}" 
                                style="color: var(--t-primary); display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; transition: all 0.2s;"
                                title="Next Pay Period">
                                 <i data-lucide="chevrons-right" style="width: 16px; height: 16px;"></i>
