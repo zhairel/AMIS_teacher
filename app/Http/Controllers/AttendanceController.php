@@ -157,8 +157,12 @@ class AttendanceController extends Controller
             $endDt = new \DateTime($endDate);
             $myLogs = [];
 
+            $todayStr = now()->toDateString();
             for ($dt = clone $startDt; $dt <= $endDt; $dt->modify('+1 day')) {
                 $dateStr = $dt->format('Y-m-d');
+                if ($dateStr > $todayStr) {
+                    continue;
+                }
                 $dayOfWeek = (int)$dt->format('N'); // 1=Mon, 5=Fri, 6=Sat, 7=Sun
 
                 if (isset($existingLogsByDate[$dateStr])) {
