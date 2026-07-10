@@ -258,13 +258,12 @@
                         @forelse($myLogs as $log)
                             @php
                                 $statusColors = [
+                                    'PRESENT' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
+                                    'LATE' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
+                                    'ABSENT' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);',
                                     'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
                                     'Late' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
-                                    'Early Time Out' => 'background-color:rgba(245, 158, 11, 0.1); color:#b45309; border:1px solid rgba(245, 158, 11, 0.35);',
-                                    'Incomplete' => 'background-color:rgba(139, 92, 246, 0.1); color:#7c3aed; border:1px solid rgba(139, 92, 246, 0.35);',
-                                    'Missing Time Out' => 'background-color:rgba(239, 68, 68, 0.1); color:#b91c1c; border:1px solid rgba(239, 68, 68, 0.35);',
-                                    'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);',
-                                    'Rest Day' => 'background-color:rgba(59, 130, 246, 0.1); color:#1d4ed8; border:1px solid rgba(59, 130, 246, 0.35);'
+                                    'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);'
                                 ];
                                 $colorStyle = $statusColors[$log['status']] ?? 'background-color:rgba(107, 114, 128, 0.1); color:#475569;';
                             @endphp
@@ -380,12 +379,12 @@
                                 @if($isDateActive && $log && $log['status'])
                                     @php
                                         $statusColors = [
+                                            'PRESENT' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3);',
+                                            'LATE' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.3);',
+                                            'ABSENT' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.3);',
                                             'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3);',
                                             'Late' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.3);',
-                                            'Early Time Out' => 'background-color:rgba(245, 158, 11, 0.1); color:#b45309; border:1px solid rgba(245, 158, 11, 0.3);',
-                                            'Incomplete' => 'background-color:rgba(139, 92, 246, 0.1); color:#7c3aed; border:1px solid rgba(139, 92, 246, 0.3);',
-                                            'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.3);',
-                                            'Rest Day' => 'background-color:rgba(59, 130, 246, 0.1); color:#1d4ed8; border:1px solid rgba(59, 130, 246, 0.3);'
+                                            'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.3);'
                                         ];
                                         $colorStyle = $statusColors[$log['status']] ?? 'background-color:rgba(107, 114, 128, 0.1); color:#475569;';
                                     @endphp
@@ -577,13 +576,12 @@
                         @forelse($report as $row)
                             @php
                                 $statusColors = [
+                                    'PRESENT' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
+                                    'LATE' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
+                                    'ABSENT' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);',
                                     'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
                                     'Late' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
-                                    'Early Time Out' => 'background-color:rgba(245, 158, 11, 0.1); color:#b45309; border:1px solid rgba(245, 158, 11, 0.35);',
-                                    'Incomplete' => 'background-color:rgba(139, 92, 246, 0.1); color:#7c3aed; border:1px solid rgba(139, 92, 246, 0.35);',
-                                    'Missing Time Out' => 'background-color:rgba(239, 68, 68, 0.1); color:#b91c1c; border:1px solid rgba(239, 68, 68, 0.35);',
-                                    'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);',
-                                    'Rest Day' => 'background-color:rgba(59, 130, 246, 0.1); color:#1d4ed8; border:1px solid rgba(59, 130, 246, 0.35);'
+                                    'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);'
                                 ];
                                 $colorStyle = $statusColors[$row['status']] ?? 'background-color:rgba(107, 114, 128, 0.1); color:#475569;';
                             @endphp

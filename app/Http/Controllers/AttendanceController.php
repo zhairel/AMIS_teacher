@@ -167,7 +167,7 @@ class AttendanceController extends Controller
 
                 if (isset($existingLogsByDate[$dateStr])) {
                     $row = $existingLogsByDate[$dateStr];
-                    if ($row['status'] !== 'Absent' && $row['status'] !== 'Rest Day') {
+                    if ($row['status'] === 'PRESENT' || $row['status'] === 'LATE') {
                         $mySummary['present']++;
                     }
                     if (preg_match('/(\d+)\s*mins?/', $row['late'], $m)) {
@@ -188,11 +188,11 @@ class AttendanceController extends Controller
                     } else {
                         // Past dates: they are absent
                         if ($dayOfWeek === 5) {
-                            $status = 'Rest Day';
-                            $remarksStr = '—';
+                            $status = 'ABSENT';
+                            $remarksStr = 'Rest Day';
                         } else {
-                            $status = 'Absent';
-                            $remarksStr = '—';
+                            $status = 'ABSENT';
+                            $remarksStr = 'No attendance record';
                         }
                     }
 

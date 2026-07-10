@@ -329,36 +329,38 @@ class ZKTecoParser
                 $totalHours = 0.0;
                 $totalHoursFormatted = '—';
 
-                // Determine Status & Remarks
+                // Determine Status: PRESENT or LATE based on Time In only
+                if ($timeInDt <= $schedInDt) {
+                    $status = 'PRESENT';
+                } else {
+                    $status = 'LATE';
+                }
+
+                // Determine Remarks
                 if (!$timeOutDt) {
-                    $status = 'Incomplete';
                     $remarksStr = 'Missing Time Out';
                 } else {
-                    if ($timeOutDt < $schedOutDt) {
-                        $status = 'Early Time Out';
-                    } elseif ($timeInDt > $schedInDt) {
-                        $status = 'Late';
-                    } else {
-                        $status = 'Present';
-                    }
+                    $timeOutTimeStr = $timeOutDt->format('H:i:s');
+                    $timeOutFormatted = $timeOutDt->format('g:i A');
 
-                    // Remarks: only show late delay minutes
-                    if ($timeInDt > $schedInDt) {
-                        $remarksStr = "{$lateMinutes} mins late";
-                    } else {
+                    if ($timeOutTimeStr < '16:00:00') {
+                        $remarksStr = 'Early Time Out';
+                    } elseif ($timeOutTimeStr === '16:00:00') {
                         $remarksStr = '—';
+                    } else {
+                        // Time Out is after 4:00 PM
+                        if ($timeInDt > $schedInDt) {
+                            $remarksStr = "Late by {$lateMinutes} minutes; Overtime until {$timeOutFormatted}";
+                        } else {
+                            $remarksStr = "Overtime until {$timeOutFormatted}";
+                        }
                     }
 
-                    // Start & End Times for hours calculation
-                    if ($timeOutDt >= $schedOutDt) {
-                        // Regular day (limit end at 4:00 PM, start at 7:30 AM or Time In if late)
-                        $calcStartDt = $timeInDt > $schedInDt ? $timeInDt : $schedInDt;
-                        $calcEndDt = $schedOutDt;
-                    } else {
-                        // Early out: show actual elapsed hours from Time In to Time Out
-                        $calcStartDt = $timeInDt;
-                        $calcEndDt = $timeOutDt;
-                    }
+                    // Total Hours calculations
+                    // Working hours start: 7:30 AM or Time In if late
+                    $calcStartDt = $timeInDt > $schedInDt ? $timeInDt : $schedInDt;
+                    // Working hours end: 4:00 PM or Time Out if early
+                    $calcEndDt = $timeOutDt >= $schedOutDt ? $schedOutDt : $timeOutDt;
 
                     $diffHours = $calcEndDt->diff($calcStartDt);
                     $diffMins = ($diffHours->h * 60) + $diffHours->i;
