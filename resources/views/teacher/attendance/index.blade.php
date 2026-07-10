@@ -3,33 +3,37 @@
 @section('content')
 <div style="display:flex; flex-direction:column; gap:24px; width: 100%;">
 
-    <!-- MY ATTENDANCE PERSONAL DASHBOARD (15-Day Cutoff) -->
-    <div class="teacher-panel" style="padding: 24px; display:flex; flex-direction:column; gap:20px;">
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; border-bottom: 1px solid var(--s-border); padding-bottom: 20px;">
-            <div>
-                <span style="font-size:11px; font-weight:800; color:var(--t-tertiary); text-transform:uppercase; letter-spacing:0.05em; display:block;">Full Name</span>
-                <strong style="font-size:18px; font-weight:800; color:var(--t-primary); margin-top:4px; display:block;">{{ $displayName }}</strong>
-            </div>
-            <div>
-                <span style="font-size:11px; font-weight:800; color:var(--t-tertiary); text-transform:uppercase; letter-spacing:0.05em; display:block;">Saved Info? (Biometric)</span>
-                <div style="margin-top:6px; display:flex; align-items:center; gap:8px;">
-                    @if($myBiometricId)
-                        <span style="font-size:11.5px; font-weight:800; text-transform:uppercase; padding:4px 10px; border-radius:6px; background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3); display:inline-flex; align-items:center; gap:6px;">
-                            <span style="width:6px; height:6px; border-radius:50%; background-color:#10b981;"></span>
-                            Linked (ID: {{ $myBiometricId }})
-                        </span>
-                    @else
-                        <span style="font-size:11.5px; font-weight:800; text-transform:uppercase; padding:4px 10px; border-radius:6px; background-color:rgba(239, 68, 68, 0.1); color:#b91c1c; border:1px solid rgba(239, 68, 68, 0.3); display:inline-flex; align-items:center; gap:6px;">
-                            <span style="width:6px; height:6px; border-radius:50%; background-color:#ef4444;"></span>
-                            Not Saved / Not Linked
-                        </span>
-                    @endif
+    <!-- PROFILE CARD (Only visible if logged in OR a profile has been selected via public inquiry) -->
+    @if(session('teacher_email') || $myBiometricId)
+        <div class="teacher-panel" style="padding: 24px; display:flex; flex-direction:column; gap:20px;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; border-bottom: 1px solid var(--s-border); padding-bottom: 20px;">
+                <div>
+                    <span style="font-size:11px; font-weight:800; color:var(--t-tertiary); text-transform:uppercase; letter-spacing:0.05em; display:block;">Full Name</span>
+                    <strong style="font-size:18px; font-weight:800; color:var(--t-primary); margin-top:4px; display:block;">{{ $displayName }}</strong>
+                </div>
+                <div>
+                    <span style="font-size:11px; font-weight:800; color:var(--t-tertiary); text-transform:uppercase; letter-spacing:0.05em; display:block;">Saved Info? (Biometric)</span>
+                    <div style="margin-top:6px; display:flex; align-items:center; gap:8px;">
+                        @if($myBiometricId)
+                            <span style="font-size:11.5px; font-weight:800; text-transform:uppercase; padding:4px 10px; border-radius:6px; background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3); display:inline-flex; align-items:center; gap:6px;">
+                                <span style="width:6px; height:6px; border-radius:50%; background-color:#10b981;"></span>
+                                Linked (ID: {{ $myBiometricId }})
+                            </span>
+                        @else
+                            <span style="font-size:11.5px; font-weight:800; text-transform:uppercase; padding:4px 10px; border-radius:6px; background-color:rgba(239, 68, 68, 0.1); color:#b91c1c; border:1px solid rgba(239, 68, 68, 0.3); display:inline-flex; align-items:center; gap:6px;">
+                                <span style="width:6px; height:6px; border-radius:50%; background-color:#ef4444;"></span>
+                                Not Saved / Not Linked
+                            </span>
+                        @endif
+                    </div>
                 </div>
             </div>
-        </div>
+    @endif
 
-        @if(!$myBiometricId)
-            @if(session('teacher_email'))
+    @if(!$myBiometricId)
+        @if(session('teacher_email'))
+            {{-- Logged in link profile form --}}
+            <div class="teacher-panel" style="padding: 24px; display:flex; flex-direction:column; gap:20px;">
                 <div style="background-color: var(--s-surface-hover); border: 1px dashed var(--s-border); padding: 20px; border-radius: 12px;">
                     <h3 style="font-size: 14px; font-weight: 700; color: var(--t-primary); margin: 0 0 8px 0; display:flex; align-items:center; gap:8px;">
                         <i data-lucide="link" style="width: 16px; height: 16px; color:#10b981;"></i> Link Biometric Account
@@ -51,28 +55,66 @@
                         </button>
                     </form>
                 </div>
-            @else
-                <div style="background-color: var(--s-surface-hover); border: 1px dashed var(--s-border); padding: 20px; border-radius: 12px;">
-                    <h3 style="font-size: 14px; font-weight: 700; color: var(--t-primary); margin: 0 0 8px 0; display:flex; align-items:center; gap:8px;">
-                        <i data-lucide="search" style="width: 16px; height: 16px; color:#10b981;"></i> Staff Attendance Lookup
-                    </h3>
-                    <p style="font-size: 12px; color: var(--t-secondary); margin: 0 0 16px 0;">Select your name from the directory below to view your pay period attendance logs.</p>
-                    <form method="GET" action="{{ route('teacher.attendance') }}" class="teacher-form" style="display:flex; gap:12px; align-items:flex-end; margin:0;">
-                        <label style="flex:1; margin:0;">
-                            <span>Select Your Profile</span>
-                            <select name="biometric_id" required style="padding: 6px 10px; font-size:13px; border-radius:8px; width:100%;">
-                                <option value="" disabled selected>Choose profile...</option>
-                                @foreach($users as $u)
-                                    <option value="{{ $u['employee_id'] }}">{{ $u['name'] }} (ID: {{ $u['employee_id'] }})</option>
-                                @endforeach
-                            </select>
-                        </label>
-                        <button type="submit" class="teacher-primary-btn" style="background-color: #059669; border-color: #059669; color: white;">
-                            View Attendance Logs
-                        </button>
-                    </form>
+            </div>
+        @else
+            {{-- Public lookup (Faculty Verification) --}}
+            <div style="background-color: var(--s-surface); border: 1px solid var(--s-border); padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); max-width: 500px; margin: 40px auto; width: 100%; box-sizing: border-box;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="width: 54px; height: 54px; border-radius: 50%; background-color: rgba(16, 185, 129, 0.1); display: inline-flex; align-items: center; justify-content: center; color: #10b981; margin-bottom: 12px;">
+                        <i data-lucide="shield-check" style="width: 28px; height: 28px;"></i>
+                    </div>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--t-primary); margin: 0;">Faculty Verification</h2>
+                    <p style="font-size: 12px; color: var(--t-tertiary); margin: 6px 0 0 0;">Verify your attendance info by Employee ID or Full Name</p>
                 </div>
-            @endif
+
+                <form method="GET" action="{{ route('teacher.attendance') }}" class="teacher-form" style="display: flex; flex-direction: column; gap: 16px; margin: 0;">
+                    <label style="margin: 0;">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--t-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Select Full Name</span>
+                        <select name="biometric_id" required style="padding: 10px 14px; font-size: 13px; border-radius: 10px; width: 100%; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 550;">
+                            <option value="" disabled selected>Choose profile...</option>
+                            @foreach($users as $u)
+                                <option value="{{ $u['employee_id'] }}">{{ strtoupper($u['name']) }} (ID: {{ $u['employee_id'] }})</option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <div style="display: flex; align-items: center; justify-content: center; margin: 8px 0; position: relative;">
+                        <span style="height: 1px; background-color: var(--s-border); flex: 1;"></span>
+                        <span style="font-size: 10px; font-weight: 800; color: var(--t-tertiary); text-transform: uppercase; padding: 0 12px; background-color: var(--s-surface); position: relative; z-index: 2;">OR</span>
+                        <span style="height: 1px; background-color: var(--s-border); flex: 1;"></span>
+                    </div>
+
+                    <label style="margin: 0;">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--t-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Enter Employee ID (PIN)</span>
+                        <input type="number" id="inputBiometricId" placeholder="e.g. 22078" style="padding: 10px 14px; font-size: 13px; border-radius: 10px; width: 100%; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 600;" oninput="syncSelectValue(this.value)">
+                    </label>
+
+                    <button type="submit" class="teacher-primary-btn" style="background-color: #059669; border-color: #059669; color: white; padding: 12px 20px; font-size: 13px; font-weight: 800; border-radius: 10px; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 10px;">
+                        Verify & View Logs
+                    </button>
+                </form>
+            </div>
+
+            <script>
+                function syncSelectValue(val) {
+                    const selectEl = document.querySelector('select[name="biometric_id"]');
+                    if (!selectEl) return;
+                    const options = selectEl.options;
+                    let matched = false;
+                    for (let i = 0; i < options.length; i++) {
+                        if (options[i].value === val) {
+                            selectEl.value = val;
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (!matched && val !== '') {
+                        selectEl.value = "";
+                    }
+                }
+            </script>
+        @endif
+    @else
             <!-- Title & cutoff paginator -->
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; border-bottom:1px solid var(--s-border); padding-bottom:16px;">
                 <div>
