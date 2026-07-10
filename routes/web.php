@@ -21,6 +21,7 @@ Route::post('/attendance/users', [App\Http\Controllers\AttendanceController::cla
 Route::post('/attendance/users/{id}/delete', [App\Http\Controllers\AttendanceController::class, 'deleteUser'])->name('teacher.attendance.users.delete');
 Route::get('/attendance/users/download', [App\Http\Controllers\AttendanceController::class, 'downloadUsers'])->name('teacher.attendance.users.download');
 Route::post('/attendance/link', [App\Http\Controllers\AttendanceController::class, 'linkBiometricProfile'])->name('teacher.attendance.link');
+Route::post('/attendance/remarks', [App\Http\Controllers\AttendanceController::class, 'storeRemark'])->name('teacher.attendance.remarks.store');
 
 Route::middleware('teacher')->group(function () {
     Route::post('/logout', [TeacherAuthController::class, 'logout'])->name('teacher.logout');

@@ -324,38 +324,62 @@ class ZKTecoParser
                     $lateMinutes = ($diff->h * 60) + $diff->i;
                 }
 
-                // Calculate Total Hours & Undertime & Overtime
-                $totalHours = 0.0;
                 $undertimeMinutes = 0;
                 $overtimeMinutes = 0;
+                $totalHours = 0.0;
+                $totalHoursFormatted = '—';
 
-                if ($timeOutDt) {
-                    $diffHours = $timeOutDt->diff($timeInDt);
-                    $totalHours = round(($diffHours->h) + ($diffHours->i / 60), 2);
+                // Determine Remarks
+                $remarksList = [];
 
-                    // Undertime (early out before Time Out schedule)
-                    if ($timeOutDt < $schedOutDt) {
-                        $diffUnder = $schedOutDt->diff($timeOutDt);
-                        $undertimeMinutes = ($diffUnder->h * 60) + $diffUnder->i;
-                    }
-
-                    // Overtime (late out after Time Out schedule)
-                    if ($timeOutDt > $schedOutDt) {
-                        $diffOver = $timeOutDt->diff($schedOutDt);
-                        $overtimeMinutes = ($diffOver->h * 60) + $diffOver->i;
-                    }
-                }
-
-                // Determine Status
                 if (!$timeOutDt) {
-                    $status = 'Missing Time Out';
-                } elseif ($totalHours < 6.0) {
-                    $status = 'Half Day';
-                } elseif ($lateMinutes > 0) {
-                    $status = 'Late';
+                    $status = 'Incomplete';
+                    $remarksList[] = 'Missing Time Out';
                 } else {
-                    $status = 'Present';
+                    // Start & End Times for hours calculation
+                    if ($timeOutDt >= $schedOutDt) {
+                        // Regular day (limit end at 4:00 PM, start at 7:30 AM or Time In if late)
+                        $calcStartDt = $timeInDt > $schedInDt ? $timeInDt : $schedInDt;
+                        $calcEndDt = $schedOutDt;
+                    } else {
+                        // Early out: show actual elapsed hours from Time In to Time Out
+                        $calcStartDt = $timeInDt;
+                        $calcEndDt = $timeOutDt;
+                    }
+
+                    $diffHours = $calcEndDt->diff($calcStartDt);
+                    $diffMins = ($diffHours->h * 60) + $diffHours->i;
+                    if ($calcEndDt < $calcStartDt) {
+                        $diffMins = 0;
+                    }
+
+                    $totalHours = round($diffMins / 60, 2);
+
+                    $hoursVal = floor($diffMins / 60);
+                    $minsVal = $diffMins % 60;
+                    if ($hoursVal > 0) {
+                        $totalHoursFormatted = $minsVal > 0 ? "{$hoursVal} hrs {$minsVal} mins" : "{$hoursVal} hrs";
+                    } else {
+                        $totalHoursFormatted = "{$minsVal} mins";
+                    }
+
+                    // Status
+                    if ($timeInDt <= $schedInDt) {
+                        $status = 'Present';
+                    } else {
+                        $status = 'Late';
+                    }
+
+                    // Remarks list builder
+                    if ($timeInDt > $schedInDt) {
+                        $remarksList[] = "{$lateMinutes} mins late";
+                    }
+                    if ($timeOutDt < $schedOutDt) {
+                        $remarksList[] = 'Early Time Out';
+                    }
                 }
+
+                $remarksStr = count($remarksList) > 0 ? implode(', ', $remarksList) : '—';
 
                 $report[] = [
                     'employee_id' => $empId,
@@ -368,7 +392,9 @@ class ZKTecoParser
                     'undertime' => $undertimeMinutes > 0 ? $this->formatDuration($undertimeMinutes) : '0m',
                     'overtime' => $overtimeMinutes > 0 ? $this->formatDuration($overtimeMinutes) : '0m',
                     'total_hours' => $totalHours,
-                    'status' => $status
+                    'total_hours_formatted' => $totalHoursFormatted,
+                    'status' => $status,
+                    'remarks' => $remarksStr
                 ];
             }
         }

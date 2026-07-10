@@ -249,10 +249,9 @@
                             <th style="padding:16px 20px;">Date</th>
                             <th style="padding:16px 20px; text-align:center;">Time In</th>
                             <th style="padding:16px 20px; text-align:center;">Time Out</th>
-                            <th style="padding:16px 20px; text-align:center;">Late</th>
-                            <th style="padding:16px 20px; text-align:center;">Overtime</th>
                             <th style="padding:16px 20px; text-align:center;">Total Hours</th>
                             <th style="padding:16px 20px; text-align:center;">Status</th>
+                            <th style="padding:16px 20px; text-align:center;">Remarks</th>
                         </tr>
                     </thead>
                     <tbody style="color:#334155; font-size:14.5px;">
@@ -261,7 +260,7 @@
                                 $statusColors = [
                                     'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
                                     'Late' => 'background-color:rgba(245, 158, 11, 0.1); color:#b45309; border:1px solid rgba(245, 158, 11, 0.35);',
-                                    'Half Day' => 'background-color:rgba(99, 102, 241, 0.1); color:#4f46e5; border:1px solid rgba(99, 102, 241, 0.35);',
+                                    'Incomplete' => 'background-color:rgba(139, 92, 246, 0.1); color:#7c3aed; border:1px solid rgba(139, 92, 246, 0.35);',
                                     'Missing Time Out' => 'background-color:rgba(239, 68, 68, 0.1); color:#b91c1c; border:1px solid rgba(239, 68, 68, 0.35);',
                                     'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);',
                                     'Rest Day' => 'background-color:rgba(59, 130, 246, 0.1); color:#1d4ed8; border:1px solid rgba(59, 130, 246, 0.35);'
@@ -270,11 +269,9 @@
                             @endphp
                             <tr style="border-bottom:1px solid var(--s-border); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--s-surface-hover)'" onmouseout="this.style.backgroundColor='transparent'">
                                 <td style="padding:16px 20px; font-weight:700; color:#0f172a;">{{ date('D, M d, Y', strtotime($log['date'])) }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $log['time_in'] && $log['time_in'] !== '—' ? date('h:i A', strtotime($log['time_in'])) : '' }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $log['time_out'] && $log['time_out'] !== '—' ? date('h:i A', strtotime($log['time_out'])) : '' }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#b45309;">{{ $log['late'] !== '0m' ? $log['late'] : '' }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#047857;">{{ $log['overtime'] !== '0m' ? $log['overtime'] : '' }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $log['total_hours'] > 0 ? $log['total_hours'] . 'h' : '' }}</td>
+                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $log['time_in'] && $log['time_in'] !== '—' ? date('h:i A', strtotime($log['time_in'])) : '—' }}</td>
+                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $log['time_out'] && $log['time_out'] !== '—' ? date('h:i A', strtotime($log['time_out'])) : '—' }}</td>
+                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $log['total_hours_formatted'] ?? '—' }}</td>
                                 <td style="padding:16px 20px; text-align:center;">
                                     @if($log['status'])
                                         <span style="font-size:11px; padding:4px 10px; font-weight:800; border-radius:6px; text-transform:uppercase; display:inline-block; letter-spacing:0.02em; {{ $colorStyle }}">
@@ -282,10 +279,26 @@
                                         </span>
                                     @endif
                                 </td>
+                                <td style="padding:16px 20px; text-align:center;">
+                                    <div style="display:inline-flex; align-items:center; flex-wrap:wrap; justify-content:center; gap:8px; width:100%;">
+                                        <span style="font-weight:600; color:#334155;">{{ $log['remarks'] }}</span>
+                                        @if($myBiometricId)
+                                            @if(isset($myRemarks[$log['date']]) && !empty($myRemarks[$log['date']]))
+                                                <button type="button" onclick="openRemarksModal('{{ $log['date'] }}', '{{ addslashes($myRemarks[$log['date']]) }}')" class="teacher-outline-btn" style="padding:2px 8px; font-size:10.5px; border-radius:6px; min-height:22px; display:inline-flex; align-items:center; gap:4px; border-color:#2563eb; color:#2563eb; background-color:rgba(37,99,235,0.02);" title="View Custom Note">
+                                                    <i data-lucide="message-square" style="width:11px; height:11px;"></i> View Remarks
+                                                </button>
+                                            @else
+                                                <button type="button" onclick="openRemarksModal('{{ $log['date'] }}', '')" class="teacher-outline-btn" style="padding:2px 8px; font-size:10.5px; border-radius:6px; min-height:22px; display:inline-flex; align-items:center; gap:4px;" title="Add Custom Note">
+                                                    <i data-lucide="plus-circle" style="width:11px; height:11px;"></i> Add Remarks
+                                                </button>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" style="padding:32px; text-align:center; color:var(--t-tertiary); font-size:14.5px;">
+                                <td colspan="6" style="padding:32px; text-align:center; color:var(--t-tertiary); font-size:14.5px;">
                                     No logs registered in this cutoff range.
                                 </td>
                             </tr>
@@ -368,8 +381,7 @@
                                         $statusColors = [
                                             'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3);',
                                             'Late' => 'background-color:rgba(245, 158, 11, 0.1); color:#b45309; border:1px solid rgba(245, 158, 11, 0.3);',
-                                            'Half Day' => 'background-color:rgba(99, 102, 241, 0.1); color:#4f46e5; border:1px solid rgba(99, 102, 241, 0.3);',
-                                            'Missing Time Out' => 'background-color:rgba(239, 68, 68, 0.1); color:#b91c1c; border:1px solid rgba(239, 68, 68, 0.3);',
+                                            'Incomplete' => 'background-color:rgba(139, 92, 246, 0.1); color:#7c3aed; border:1px solid rgba(139, 92, 246, 0.3);',
                                             'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.3);',
                                             'Rest Day' => 'background-color:rgba(59, 130, 246, 0.1); color:#1d4ed8; border:1px solid rgba(59, 130, 246, 0.3);'
                                         ];
@@ -554,10 +566,9 @@
                             <th style="padding:16px 20px;">Date</th>
                             <th style="padding:16px 20px; text-align:center;">Time In</th>
                             <th style="padding:16px 20px; text-align:center;">Time Out</th>
-                            <th style="padding:16px 20px; text-align:center;">Late</th>
-                            <th style="padding:16px 20px; text-align:center;">Overtime</th>
-                            <th style="padding:16px 20px; text-align:center;">Total</th>
+                            <th style="padding:16px 20px; text-align:center;">Total Hours</th>
                             <th style="padding:16px 20px; text-align:center;">Status</th>
+                            <th style="padding:16px 20px; text-align:center;">Remarks</th>
                         </tr>
                     </thead>
                     <tbody style="color:#334155; font-size:14.5px;">
@@ -566,7 +577,7 @@
                                 $statusColors = [
                                     'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
                                     'Late' => 'background-color:rgba(245, 158, 11, 0.1); color:#b45309; border:1px solid rgba(245, 158, 11, 0.35);',
-                                    'Half Day' => 'background-color:rgba(99, 102, 241, 0.1); color:#4f46e5; border:1px solid rgba(99, 102, 241, 0.35);',
+                                    'Incomplete' => 'background-color:rgba(139, 92, 246, 0.1); color:#7c3aed; border:1px solid rgba(139, 92, 246, 0.35);',
                                     'Missing Time Out' => 'background-color:rgba(239, 68, 68, 0.1); color:#b91c1c; border:1px solid rgba(239, 68, 68, 0.35);',
                                     'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);',
                                     'Rest Day' => 'background-color:rgba(59, 130, 246, 0.1); color:#1d4ed8; border:1px solid rgba(59, 130, 246, 0.35);'
@@ -580,11 +591,9 @@
                                 </td>
                                 <td style="padding:16px 20px;">{{ $row['department'] }}</td>
                                 <td style="padding:16px 20px; font-weight:600;">{{ date('M d, Y', strtotime($row['date'])) }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $row['time_in'] && $row['time_in'] !== '—' ? date('h:i A', strtotime($row['time_in'])) : '' }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $row['time_out'] && $row['time_out'] !== '—' ? date('h:i A', strtotime($row['time_out'])) : '' }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#b45309;">{{ $row['late'] !== '0m' ? $row['late'] : '' }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#047857;">{{ $row['overtime'] !== '0m' ? $row['overtime'] : '' }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $row['total_hours'] > 0 ? $row['total_hours'] . 'h' : '' }}</td>
+                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $row['time_in'] && $row['time_in'] !== '—' ? date('h:i A', strtotime($row['time_in'])) : '—' }}</td>
+                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $row['time_out'] && $row['time_out'] !== '—' ? date('h:i A', strtotime($row['time_out'])) : '—' }}</td>
+                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $row['total_hours_formatted'] ?? '—' }}</td>
                                 <td style="padding:16px 20px; text-align:center;">
                                     @if($row['status'])
                                         <span style="font-size:11px; padding:4px 10px; font-weight:800; border-radius:6px; text-transform:uppercase; display:inline-block; letter-spacing:0.02em; {{ $colorStyle }}">
@@ -592,10 +601,11 @@
                                         </span>
                                     @endif
                                 </td>
+                                <td style="padding:16px 20px; text-align:center; font-weight:600; color:#334155;">{{ $row['remarks'] ?? '—' }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" style="padding: 32px; text-align: center; color: var(--t-tertiary); font-size:14.5px;">
+                                <td colspan="8" style="padding: 32px; text-align: center; color: var(--t-tertiary); font-size:14.5px;">
                                     <i data-lucide="clock-alert" style="width:24px; height:24px; margin-bottom:8px; color:var(--t-tertiary); display:inline-block; vertical-align:middle;"></i>
                                     No attendance records found. Try importing DAT files.
                                 </td>
@@ -796,5 +806,81 @@
         const pref = localStorage.getItem('att_preferred_view') || 'list';
         switchView(pref);
     });
+</script>
+
+<!-- Remarks Modal -->
+<div id="remarksModal" style="display:none; position:fixed; inset:0; background-color:rgba(15, 23, 42, 0.4); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+    <div style="background-color:var(--s-surface); border:1px solid var(--s-border); border-radius:16px; max-width:480px; width:100%; box-shadow:0 10px 25px -5px rgba(0,0,0,0.1); display:flex; flex-direction:column; overflow:hidden;">
+        <div style="padding:20px; border-bottom:1px solid var(--s-border); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h3 style="font-size:15px; font-weight:800; color:var(--t-primary); margin:0;">Attendance Remarks</h3>
+                <span id="modalDateLabel" style="font-size:11px; color:var(--t-tertiary); font-weight:700;"></span>
+            </div>
+            <button type="button" onclick="closeRemarksModal()" style="border:none; background:none; cursor:pointer; color:var(--t-tertiary);"><i data-lucide="x" style="width:18px; height:18px;"></i></button>
+        </div>
+        <div style="padding:20px;">
+            <label style="display:flex; flex-direction:column; gap:8px;">
+                <span style="font-size:11px; font-weight:700; color:var(--t-secondary); text-transform:uppercase; letter-spacing:0.05em;">Custom Remarks / Note</span>
+                <textarea id="modalRemarkText" rows="4" placeholder="Type sick leave details, official business travel, or logs explanations..." style="width:100%; padding:10px 14px; font-size:13px; border-radius:10px; border:1px solid var(--s-border); background-color:var(--s-surface); color:var(--t-primary); resize:vertical; font-family:inherit;"></textarea>
+            </label>
+        </div>
+        <div style="padding:16px 20px; background-color:var(--s-surface-hover); border-top:1px solid var(--s-border); display:flex; justify-content:flex-end; gap:12px;">
+            <button type="button" onclick="closeRemarksModal()" class="teacher-outline-btn" style="min-height:36px; padding:6px 16px; border-radius:8px;">Cancel</button>
+            <button type="button" onclick="saveRemarks()" class="teacher-primary-btn" style="background-color:#059669; border-color:#059669; color:white; min-height:36px; padding:6px 16px; border-radius:8px;">Save Remarks</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeRemarkDate = null;
+    
+    function openRemarksModal(date, currentRemark) {
+        activeRemarkDate = date;
+        const dateObj = new Date(date);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        document.getElementById('modalDateLabel').innerText = formattedDate;
+        document.getElementById('modalRemarkText').value = currentRemark;
+        document.getElementById('remarksModal').style.display = 'flex';
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+    
+    function closeRemarksModal() {
+        document.getElementById('remarksModal').style.display = 'none';
+        activeRemarkDate = null;
+    }
+    
+    function saveRemarks() {
+        if (!activeRemarkDate) return;
+        const remark = document.getElementById('modalRemarkText').value.trim();
+        const employeeId = '{{ $myBiometricId }}';
+        
+        fetch('{{ route("teacher.attendance.remarks.store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                employee_id: employeeId,
+                date: activeRemarkDate,
+                remark: remark
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeRemarksModal();
+                window.location.reload();
+            } else {
+                alert(data.message || 'Failed to save remarks.');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving remarks:', error);
+            alert('An error occurred while saving remarks.');
+        });
+    }
 </script>
 @endsection

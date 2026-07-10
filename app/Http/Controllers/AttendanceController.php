@@ -184,18 +184,22 @@ class AttendanceController extends Controller
                     if ($dateStr >= now()->toDateString()) {
                         // Today or future dates: leave status blank
                         $status = '';
+                        $remarksStr = '—';
                     } else {
                         // Past dates: check if biometric logs have been uploaded by admin
                         if ($hasAnyLogsInCutoff && in_array($dateStr, $uploadedDates)) {
                             // Data exists for other employees on this day, so this teacher was absent
                             if ($dayOfWeek === 5) {
                                 $status = 'Rest Day';
+                                $remarksStr = 'Rest Day';
                             } else {
                                 $status = 'Absent';
+                                $remarksStr = 'No attendance record';
                             }
                         } else {
                             // Biometric data hasn't been uploaded yet by admin (or teacher has no logs in cutoff)
                             $status = '';
+                            $remarksStr = '—';
                         }
                     }
 
@@ -210,13 +214,26 @@ class AttendanceController extends Controller
                         'undertime' => '0m',
                         'overtime' => '0m',
                         'total_hours' => 0.0,
-                        'status' => $status
+                        'total_hours_formatted' => '—',
+                        'status' => $status,
+                        'remarks' => $remarksStr
                     ];
                 }
             }
 
             usort($myLogs, fn($a, $b) => strcmp($a['date'], $b['date']));
         }
+
+        $myRemarks = [];
+        if ($myBiometricId) {
+            $myRemarks = DB::table('zk_attendance_remarks')
+                ->where('employee_id', $myBiometricId)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->get()
+                ->pluck('remark', 'date')
+                ->toArray();
+        }
+
         // Calculate previous period parameters
         if ($cutoff === '16-end') {
             $prevMonth = $myMonth;
@@ -301,6 +318,7 @@ class AttendanceController extends Controller
                 // My Attendance parameters
                 'myBiometricId' => $myBiometricId,
                 'myLogs' => $myLogs,
+                'myRemarks' => $myRemarks,
                 'mySummary' => $mySummary,
                 'myCutoff' => $cutoff,
                 'myMonth' => $myMonth,
@@ -500,5 +518,28 @@ class AttendanceController extends Controller
         }
 
         return redirect()->back()->with('success', 'Biometric profile linked successfully!');
+    }
+
+    /**
+     * Store custom remark for a given employee and date
+     */
+    public function storeRemark(Request $request)
+    {
+        $request->validate([
+            'employee_id' => ['required', 'integer'],
+            'date' => ['required', 'date_format:Y-m-d'],
+            'remark' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        try {
+            DB::table('zk_attendance_remarks')->updateOrInsert(
+                ['employee_id' => $request->employee_id, 'date' => $request->date],
+                ['remark' => $request->remark, 'updated_at' => now()]
+            );
+
+            return response()->json(['success' => true, 'message' => 'Remarks updated successfully!']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to save remarks: ' . $e->getMessage()], 500);
+        }
     }
 }
