@@ -4,32 +4,53 @@
 <div style="display:flex; flex-direction:column; gap:24px; width: 100%;">
 
     <!-- MY ATTENDANCE PERSONAL DASHBOARD (15-Day Cutoff) -->
-    @if(!$myBiometricId)
-        <div class="teacher-panel" style="padding: 20px; display:flex; flex-direction:column; gap:16px;">
+    <div class="teacher-panel" style="padding: 24px; display:flex; flex-direction:column; gap:20px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; border-bottom: 1px solid var(--s-border); padding-bottom: 20px;">
             <div>
-                <h2 style="font-size:15px; font-weight:700; color:var(--t-primary); display:flex; align-items:center; gap:8px; margin:0;">
-                    <i data-lucide="user-check" style="color:#10b981;"></i> Link Biometric Profile
-                </h2>
-                <p style="font-size:11px; color:var(--t-tertiary); margin: 4px 0 0 0;">Please link your biometric account to view your personal cutoff reports and pay period logs.</p>
+                <span style="font-size:11px; font-weight:800; color:var(--t-tertiary); text-transform:uppercase; letter-spacing:0.05em; display:block;">Full Name</span>
+                <strong style="font-size:18px; font-weight:800; color:var(--t-primary); margin-top:4px; display:block;">{{ session('teacher_name', 'AMIS Teacher') }}</strong>
             </div>
-            <form method="POST" action="{{ route('teacher.attendance.link') }}" class="teacher-form" style="display:flex; gap:12px; align-items:flex-end; margin:0;">
-                @csrf
-                <label style="flex:1; margin:0;">
-                    <span>Select Your Biometric Profile</span>
-                    <select name="biometric_id" required style="padding: 6px 10px; font-size:13px; border-radius:8px; width:100%;">
-                        <option value="" disabled selected>Choose profile...</option>
-                        @foreach($users as $u)
-                            <option value="{{ $u['employee_id'] }}">{{ $u['name'] }} (ID: {{ $u['employee_id'] }})</option>
-                        @endforeach
-                    </select>
-                </label>
-                <button type="submit" class="teacher-primary-btn" style="background-color: #059669; border-color: #059669; color: white;">
-                    Link Profile
-                </button>
-            </form>
+            <div>
+                <span style="font-size:11px; font-weight:800; color:var(--t-tertiary); text-transform:uppercase; letter-spacing:0.05em; display:block;">Saved Info? (Biometric)</span>
+                <div style="margin-top:6px; display:flex; align-items:center; gap:8px;">
+                    @if($myBiometricId)
+                        <span style="font-size:11.5px; font-weight:800; text-transform:uppercase; padding:4px 10px; border-radius:6px; background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3); display:inline-flex; align-items:center; gap:6px;">
+                            <span style="width:6px; height:6px; border-radius:50%; background-color:#10b981;"></span>
+                            Linked (ID: {{ $myBiometricId }})
+                        </span>
+                    @else
+                        <span style="font-size:11.5px; font-weight:800; text-transform:uppercase; padding:4px 10px; border-radius:6px; background-color:rgba(239, 68, 68, 0.1); color:#b91c1c; border:1px solid rgba(239, 68, 68, 0.3); display:inline-flex; align-items:center; gap:6px;">
+                            <span style="width:6px; height:6px; border-radius:50%; background-color:#ef4444;"></span>
+                            Not Saved / Not Linked
+                        </span>
+                    @endif
+                </div>
+            </div>
         </div>
-    @else
-        <div class="teacher-panel" style="padding: 24px; display:flex; flex-direction:column; gap:20px;">
+
+        @if(!$myBiometricId)
+            <div style="background-color: var(--s-surface-hover); border: 1px dashed var(--s-border); padding: 20px; border-radius: 12px;">
+                <h3 style="font-size: 14px; font-weight: 700; color: var(--t-primary); margin: 0 0 8px 0; display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="link" style="width: 16px; height: 16px; color:#10b981;"></i> Link Biometric Account
+                </h3>
+                <p style="font-size: 12px; color: var(--t-secondary); margin: 0 0 16px 0;">Please select your name from the biometric directory below to save your link and display your attendance logs.</p>
+                <form method="POST" action="{{ route('teacher.attendance.link') }}" class="teacher-form" style="display:flex; gap:12px; align-items:flex-end; margin:0;">
+                    @csrf
+                    <label style="flex:1; margin:0;">
+                        <span>Select Your Biometric Profile</span>
+                        <select name="biometric_id" required style="padding: 6px 10px; font-size:13px; border-radius:8px; width:100%;">
+                            <option value="" disabled selected>Choose profile...</option>
+                            @foreach($users as $u)
+                                <option value="{{ $u['employee_id'] }}">{{ $u['name'] }} (ID: {{ $u['employee_id'] }})</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <button type="submit" class="teacher-primary-btn" style="background-color: #059669; border-color: #059669; color: white;">
+                        Link Profile
+                    </button>
+                </form>
+            </div>
+        @else
             <!-- Title & cutoff paginator -->
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; border-bottom:1px solid var(--s-border); padding-bottom:16px;">
                 <div>
