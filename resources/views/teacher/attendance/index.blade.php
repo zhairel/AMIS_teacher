@@ -88,18 +88,6 @@
                         Verify & View Logs
                     </button>
                 </form>
-
-                <div style="background-color: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.15); padding: 14px; border-radius: 12px; display: flex; gap: 10px; align-items: flex-start; margin-top: 20px;">
-                    <i data-lucide="info" style="color: #3b82f6; width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px;"></i>
-                    <div style="font-size: 11.5px; color: var(--t-secondary); line-height: 1.4; margin: 0;">
-                        <strong style="color: var(--t-primary); display: block; margin-bottom: 2px;">Sync Notice (No Network Cable / LAN)</strong>
-                        Since there is no direct network or TCP/IP cable connection to the biometric device, IT staff updates logs manually using a USB flash drive twice a day:
-                        <ul style="margin: 4px 0 0 0; padding-left: 16px; font-weight: 600; color: var(--t-primary);">
-                            <li>Morning: After 7:30 AM Recess</li>
-                            <li>Afternoon: After 6:00 PM</li>
-                        </ul>
-                    </div>
-                </div>
             </div>
 
             <script>
