@@ -69,8 +69,8 @@
 
                 <form method="GET" action="{{ route('teacher.attendance') }}" class="teacher-form" style="display: flex; flex-direction: column; gap: 16px; margin: 0;" onsubmit="return validateSearchForm()">
                     <label style="margin: 0;">
-                        <span style="font-size: 11px; font-weight: 700; color: var(--t-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Enter Full Name</span>
-                        <input type="text" name="search_name" id="searchNameInput" placeholder="e.g. Mon Zhairel Lingasa" style="padding: 10px 14px; font-size: 13px; border-radius: 10px; width: 100%; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 600; text-transform: uppercase;" onfocus="document.getElementById('searchIdInput').value = ''" oninput="this.value = this.value.toUpperCase()">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--t-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Enter First Name or Full Name</span>
+                        <input type="text" name="search_name" id="searchNameInput" placeholder="e.g. ZHAIREL or MON ZHAIREL LINGASA" style="padding: 10px 14px; font-size: 13px; border-radius: 10px; width: 100%; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 600; text-transform: uppercase;" onfocus="document.getElementById('searchIdInput').value = ''" oninput="this.value = this.value.toUpperCase()">
                     </label>
 
                     <div style="display: flex; align-items: center; justify-content: center; margin: 8px 0; position: relative;">
