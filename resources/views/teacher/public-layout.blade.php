@@ -97,6 +97,13 @@
             </div>
         @endif
 
+        @if(session('error'))
+            <div class="teacher-alert" style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px; padding: 12px 16px; background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                <i data-lucide="alert-circle" style="color: #b91c1c; width: 18px; height: 18px;"></i>
+                {{ session('error') }}
+            </div>
+        @endif
+
         @yield('content')
     </div>
 

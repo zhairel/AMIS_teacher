@@ -36,6 +36,19 @@ class AttendanceController extends Controller
 
         // Teacher Personal Attendance Scoping
         $myBiometricId = $request->query('biometric_id');
+
+        if ($request->has('search_id') && !empty($request->query('search_id'))) {
+            $myBiometricId = $request->query('search_id');
+        } elseif ($request->has('search_name') && !empty($request->query('search_name'))) {
+            $matchedUser = DB::table('zk_users')
+                ->where('name', 'like', '%' . $request->query('search_name') . '%')
+                ->first();
+            if ($matchedUser) {
+                $myBiometricId = $matchedUser->employee_id;
+            } else {
+                return redirect()->route('teacher.attendance')->with('error', 'Faculty member not found. Please check spelling.');
+            }
+        }
         
         $selectedBiometricUser = null;
         if ($myBiometricId) {

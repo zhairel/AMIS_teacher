@@ -67,15 +67,10 @@
                     <p style="font-size: 12px; color: var(--t-tertiary); margin: 6px 0 0 0;">Verify your attendance info by Employee ID or Full Name</p>
                 </div>
 
-                <form method="GET" action="{{ route('teacher.attendance') }}" class="teacher-form" style="display: flex; flex-direction: column; gap: 16px; margin: 0;">
+                <form method="GET" action="{{ route('teacher.attendance') }}" class="teacher-form" style="display: flex; flex-direction: column; gap: 16px; margin: 0;" onsubmit="return validateSearchForm()">
                     <label style="margin: 0;">
-                        <span style="font-size: 11px; font-weight: 700; color: var(--t-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Select Full Name</span>
-                        <select name="biometric_id" required style="padding: 10px 14px; font-size: 13px; border-radius: 10px; width: 100%; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 550;">
-                            <option value="" disabled selected>Choose profile...</option>
-                            @foreach($users as $u)
-                                <option value="{{ $u['employee_id'] }}">{{ strtoupper($u['name']) }} (ID: {{ $u['employee_id'] }})</option>
-                            @endforeach
-                        </select>
+                        <span style="font-size: 11px; font-weight: 700; color: var(--t-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Enter Full Name</span>
+                        <input type="text" name="search_name" id="searchNameInput" placeholder="e.g. Mon Zhairel Lingasa" style="padding: 10px 14px; font-size: 13px; border-radius: 10px; width: 100%; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 600;" onfocus="document.getElementById('searchIdInput').value = ''">
                     </label>
 
                     <div style="display: flex; align-items: center; justify-content: center; margin: 8px 0; position: relative;">
@@ -86,7 +81,7 @@
 
                     <label style="margin: 0;">
                         <span style="font-size: 11px; font-weight: 700; color: var(--t-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Enter Employee ID (PIN)</span>
-                        <input type="number" id="inputBiometricId" placeholder="e.g. 22078" style="padding: 10px 14px; font-size: 13px; border-radius: 10px; width: 100%; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 600;" oninput="syncSelectValue(this.value)">
+                        <input type="text" name="search_id" id="searchIdInput" pattern="[0-9]*" inputmode="numeric" placeholder="e.g. 22078" style="padding: 10px 14px; font-size: 13px; border-radius: 10px; width: 100%; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 600;" onfocus="document.getElementById('searchNameInput').value = ''">
                     </label>
 
                     <button type="submit" class="teacher-primary-btn" style="background-color: #059669; border-color: #059669; color: white; padding: 12px 20px; font-size: 13px; font-weight: 800; border-radius: 10px; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 10px;">
@@ -96,21 +91,14 @@
             </div>
 
             <script>
-                function syncSelectValue(val) {
-                    const selectEl = document.querySelector('select[name="biometric_id"]');
-                    if (!selectEl) return;
-                    const options = selectEl.options;
-                    let matched = false;
-                    for (let i = 0; i < options.length; i++) {
-                        if (options[i].value === val) {
-                            selectEl.value = val;
-                            matched = true;
-                            break;
-                        }
+                function validateSearchForm() {
+                    const nameVal = document.getElementById('searchNameInput').value.trim();
+                    const idVal = document.getElementById('searchIdInput').value.trim();
+                    if (!nameVal && !idVal) {
+                        alert('Please enter either your Full Name or Employee ID.');
+                        return false;
                     }
-                    if (!matched && val !== '') {
-                        selectEl.value = "";
-                    }
+                    return true;
                 }
             </script>
         @endif
@@ -159,9 +147,16 @@
                     </div>
                     
                     <!-- Change Link/Profile Option -->
-                    <button type="button" onclick="const div = document.getElementById('changeBiometricDiv'); div.style.display = div.style.display === 'none' ? 'block' : 'none';" class="teacher-outline-btn" style="padding: 6px 12px; font-size:11.5px; min-height:34px; border-radius: 8px;">
-                        {{ session('teacher_email') ? 'Change Link' : 'Change Profile' }}
-                    </button>
+                    <!-- Change Link/Profile Option -->
+                    @if(session('teacher_email'))
+                        <button type="button" onclick="const div = document.getElementById('changeBiometricDiv'); div.style.display = div.style.display === 'none' ? 'block' : 'none';" class="teacher-outline-btn" style="padding: 6px 12px; font-size:11.5px; min-height:34px; border-radius: 8px;">
+                            Change Link
+                        </button>
+                    @else
+                        <a href="{{ route('teacher.attendance') }}" class="teacher-outline-btn" style="padding: 6px 12px; font-size:11.5px; min-height:34px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                            Change Profile
+                        </a>
+                    @endif
                 </div>
             </div>
 
