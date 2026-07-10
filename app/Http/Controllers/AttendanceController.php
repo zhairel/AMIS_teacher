@@ -35,20 +35,34 @@ class AttendanceController extends Controller
         $report = $this->parser->generateAttendanceReport($dbLogs, $dbUsers, $dbDepts, $scheduleConfig);
 
         // Teacher Personal Attendance Scoping
-        $teacherUser = DB::table('users')->where('email', session('teacher_email'))->first();
-        $myBiometricId = $teacherUser ? $teacherUser->biometric_id : null;
+        $myBiometricId = $request->query('biometric_id');
+        
+        $selectedBiometricUser = null;
+        if ($myBiometricId) {
+            $selectedBiometricUser = DB::table('zk_users')->where('employee_id', $myBiometricId)->first();
+        }
 
-        if (!$myBiometricId && session('teacher_name')) {
-            $matchedUser = DB::table('zk_users')
-                ->where('name', 'like', '%' . session('teacher_name') . '%')
-                ->first();
-            if ($matchedUser) {
-                $myBiometricId = $matchedUser->employee_id;
-                if ($teacherUser) {
-                    DB::table('users')->where('id', $teacherUser->id)->update(['biometric_id' => $myBiometricId]);
+        if (!$myBiometricId) {
+            $teacherUser = DB::table('users')->where('email', session('teacher_email'))->first();
+            $myBiometricId = $teacherUser ? $teacherUser->biometric_id : null;
+
+            if (!$myBiometricId && session('teacher_name')) {
+                $matchedUser = DB::table('zk_users')
+                    ->where('name', 'like', '%' . session('teacher_name') . '%')
+                    ->first();
+                if ($matchedUser) {
+                    $myBiometricId = $matchedUser->employee_id;
+                    if ($teacherUser) {
+                        DB::table('users')->where('id', $teacherUser->id)->update(['biometric_id' => $myBiometricId]);
+                    }
                 }
             }
+            if ($myBiometricId) {
+                $selectedBiometricUser = DB::table('zk_users')->where('employee_id', $myBiometricId)->first();
+            }
         }
+
+        $displayName = $selectedBiometricUser ? $selectedBiometricUser->name : (session('teacher_name') ?: 'Staff Member');
 
         $currentDay = now()->day;
         $defaultCutoff = $currentDay <= 15 ? '1-15' : '16-end';
@@ -170,7 +184,7 @@ class AttendanceController extends Controller
 
                     $myLogs[] = [
                         'employee_id' => $myBiometricId,
-                        'name' => session('teacher_name'),
+                        'name' => $displayName,
                         'department' => 'Main',
                         'date' => $dateStr,
                         'time_in' => '',
@@ -265,6 +279,7 @@ class AttendanceController extends Controller
                 'search' => $request->query('search'),
                 'users' => $dbUsers,
                 'departments' => $dbDepts,
+                'displayName' => $displayName,
                 
                 // My Attendance parameters
                 'myBiometricId' => $myBiometricId,
