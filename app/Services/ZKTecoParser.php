@@ -329,13 +329,26 @@ class ZKTecoParser
                 $totalHours = 0.0;
                 $totalHoursFormatted = '—';
 
-                // Determine Remarks
-                $remarksList = [];
-
+                // Determine Status & Remarks
                 if (!$timeOutDt) {
                     $status = 'Incomplete';
-                    $remarksList[] = 'Missing Time Out';
+                    $remarksStr = 'Missing Time Out';
                 } else {
+                    if ($timeOutDt < $schedOutDt) {
+                        $status = 'Early Time Out';
+                    } elseif ($timeInDt > $schedInDt) {
+                        $status = 'Late';
+                    } else {
+                        $status = 'Present';
+                    }
+
+                    // Remarks: only show late delay minutes
+                    if ($timeInDt > $schedInDt) {
+                        $remarksStr = "{$lateMinutes} mins late";
+                    } else {
+                        $remarksStr = '—';
+                    }
+
                     // Start & End Times for hours calculation
                     if ($timeOutDt >= $schedOutDt) {
                         // Regular day (limit end at 4:00 PM, start at 7:30 AM or Time In if late)
@@ -362,24 +375,7 @@ class ZKTecoParser
                     } else {
                         $totalHoursFormatted = "{$minsVal} mins";
                     }
-
-                    // Status
-                    if ($timeInDt <= $schedInDt) {
-                        $status = 'Present';
-                    } else {
-                        $status = 'Late';
-                    }
-
-                    // Remarks list builder
-                    if ($timeInDt > $schedInDt) {
-                        $remarksList[] = "{$lateMinutes} mins late";
-                    }
-                    if ($timeOutDt < $schedOutDt) {
-                        $remarksList[] = 'Early Time Out';
-                    }
                 }
-
-                $remarksStr = count($remarksList) > 0 ? implode(', ', $remarksList) : '—';
 
                 $report[] = [
                     'employee_id' => $empId,

@@ -186,19 +186,12 @@ class AttendanceController extends Controller
                         $status = '';
                         $remarksStr = '—';
                     } else {
-                        // Past dates: check if biometric logs have been uploaded by admin
-                        if ($hasAnyLogsInCutoff && in_array($dateStr, $uploadedDates)) {
-                            // Data exists for other employees on this day, so this teacher was absent
-                            if ($dayOfWeek === 5) {
-                                $status = 'Rest Day';
-                                $remarksStr = 'Rest Day';
-                            } else {
-                                $status = 'Absent';
-                                $remarksStr = 'No attendance record';
-                            }
+                        // Past dates: they are absent
+                        if ($dayOfWeek === 5) {
+                            $status = 'Rest Day';
+                            $remarksStr = '—';
                         } else {
-                            // Biometric data hasn't been uploaded yet by admin (or teacher has no logs in cutoff)
-                            $status = '';
+                            $status = 'Absent';
                             $remarksStr = '—';
                         }
                     }
