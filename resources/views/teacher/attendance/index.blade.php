@@ -271,12 +271,12 @@
                 <table style="width:100%; border-collapse:collapse; text-align:left;">
                     <thead>
                         <tr style="border-bottom: 2px solid var(--s-border); font-weight:800; color:var(--t-primary); font-size:13.5px;">
-                            <th style="padding:16px 20px;">Date</th>
-                            <th style="padding:16px 20px; text-align:center;">Time In</th>
-                            <th style="padding:16px 20px; text-align:center;">Time Out</th>
-                            <th style="padding:16px 20px; text-align:center;">Total Hours</th>
-                            <th style="padding:16px 20px; text-align:center;">Status</th>
-                            <th style="padding:16px 20px; text-align:center;">Remarks</th>
+                            <th style="padding:14px 16px;">Date</th>
+                            <th style="padding:14px 16px;">Time In</th>
+                            <th style="padding:14px 16px;">Time Out</th>
+                            <th style="padding:14px 16px;">Total Hours</th>
+                            <th style="padding:14px 16px;">Status</th>
+                            <th style="padding:14px 16px;">Remarks</th>
                         </tr>
                     </thead>
                     <tbody style="color:#334155; font-size:14.5px;">
@@ -293,27 +293,27 @@
                                 $colorStyle = $statusColors[$log['status']] ?? 'background-color:rgba(107, 114, 128, 0.1); color:#475569;';
                             @endphp
                             <tr style="border-bottom:1px solid var(--s-border); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--s-surface-hover)'" onmouseout="this.style.backgroundColor='transparent'">
-                                <td style="padding:16px 20px; font-weight:700; color:#0f172a;">{{ date('D, M d, Y', strtotime($log['date'])) }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $log['time_in'] && $log['time_in'] !== '—' ? date('h:i A', strtotime($log['time_in'])) : '—' }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $log['time_out'] && $log['time_out'] !== '—' ? date('h:i A', strtotime($log['time_out'])) : '—' }}</td>
-                                <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $log['total_hours_formatted'] ?? '—' }}</td>
-                                <td style="padding:16px 20px; text-align:center;">
+                                <td style="padding:14px 16px; font-weight:700; color:#0f172a;">{{ date('D, M d, Y', strtotime($log['date'])) }}</td>
+                                <td style="padding:14px 16px; font-weight:700; color:#0f172a;">{{ $log['time_in'] && $log['time_in'] !== '—' ? date('h:i A', strtotime($log['time_in'])) : '—' }}</td>
+                                <td style="padding:14px 16px; font-weight:700; color:#0f172a;">{{ $log['time_out'] && $log['time_out'] !== '—' ? date('h:i A', strtotime($log['time_out'])) : '—' }}</td>
+                                <td style="padding:14px 16px; font-weight:700; color:#0f172a;">{{ $log['total_hours_formatted'] ?? '—' }}</td>
+                                <td style="padding:14px 16px;">
                                     @if($log['status'])
                                         <span style="font-size:11px; padding:4px 10px; font-weight:800; border-radius:6px; text-transform:uppercase; display:inline-block; letter-spacing:0.02em; {{ $colorStyle }}">
                                             {{ $log['status'] }}
                                         </span>
                                     @endif
                                 </td>
-                                <td style="padding:16px 20px; text-align:center;">
-                                    <div style="display:inline-flex; align-items:center; flex-wrap:wrap; justify-content:center; gap:8px; width:100%;">
+                                <td style="padding:14px 16px;">
+                                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:24px;">
                                         <span style="font-weight:600; color:#334155;">{{ $log['remarks'] }}</span>
                                         @if($myBiometricId)
                                             @if(isset($myRemarks[$log['date']]) && !empty($myRemarks[$log['date']]))
-                                                <button type="button" onclick="openRemarksModal('{{ $log['date'] }}', '{{ addslashes($myRemarks[$log['date']]) }}')" class="teacher-outline-btn" style="padding:2px 8px; font-size:10.5px; border-radius:6px; min-height:22px; display:inline-flex; align-items:center; gap:4px; border-color:#2563eb; color:#2563eb; background-color:rgba(37,99,235,0.02);" title="View Custom Note">
+                                                <button type="button" onclick="openRemarksModal('{{ $log['date'] }}', '{{ addslashes($myRemarks[$log['date']]) }}')" class="teacher-outline-btn" style="padding:2px 8px; font-size:10.5px; border-radius:6px; min-height:22px; display:inline-flex; align-items:center; gap:4px; border-color:#2563eb; color:#2563eb; background-color:rgba(37,99,235,0.02); flex-shrink:0;" title="View Custom Note">
                                                     <i data-lucide="message-square" style="width:11px; height:11px;"></i> View Remarks
                                                 </button>
                                             @else
-                                                <button type="button" onclick="openRemarksModal('{{ $log['date'] }}', '')" class="teacher-outline-btn" style="padding:2px 8px; font-size:10.5px; border-radius:6px; min-height:22px; display:inline-flex; align-items:center; gap:4px;" title="Add Custom Note">
+                                                <button type="button" onclick="openRemarksModal('{{ $log['date'] }}', '')" class="teacher-outline-btn" style="padding:2px 8px; font-size:10.5px; border-radius:6px; min-height:22px; display:inline-flex; align-items:center; gap:4px; flex-shrink:0;" title="Add Custom Note">
                                                     <i data-lucide="plus-circle" style="width:11px; height:11px;"></i> Add Remarks
                                                 </button>
                                             @endif
