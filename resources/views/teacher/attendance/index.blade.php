@@ -56,38 +56,29 @@
                     </form>
                 </div>
             </div>
+        @elseif(auth()->user() && auth()->user()->role === 'admin')
+            {{-- Admin view is handled separately below --}}
         @else
-            {{-- Public lookup (Faculty Verification) --}}
-            <div style="background-color: var(--s-surface); border: 1px solid var(--s-border); padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); max-width: 500px; margin: 40px auto; width: 100%; box-sizing: border-box;">
-                <div style="text-align: center; margin-bottom: 24px;">
-                    <div style="width: 54px; height: 54px; border-radius: 50%; background-color: rgba(16, 185, 129, 0.1); display: inline-flex; align-items: center; justify-content: center; color: #10b981; margin-bottom: 12px;">
-                        <i data-lucide="shield-check" style="width: 28px; height: 28px;"></i>
+            {{-- Public Guest view (Compact lookup + Daily Attendance Report) --}}
+            <div style="background-color: var(--s-surface); border: 1px solid var(--s-border); padding: 20px 24px; border-radius: 16px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px; margin-bottom: 8px; box-sizing: border-box; width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h2 style="font-size: 16px; font-weight: 800; color: var(--t-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="shield-check" style="color: #10b981;"></i> Faculty Attendance Portal
+                        </h2>
+                        <p style="font-size: 12px; color: var(--t-tertiary); margin: 4px 0 0 0;">View public logs or verify individual credentials below.</p>
                     </div>
-                    <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--t-primary); margin: 0;">Faculty Verification</h2>
-                    <p style="font-size: 12px; color: var(--t-tertiary); margin: 6px 0 0 0;">Verify your attendance info by Employee ID or Full Name</p>
+                    
+                    {{-- Compact Verification Form --}}
+                    <form method="GET" action="{{ route('teacher.attendance') }}" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0;" onsubmit="return validateSearchForm()">
+                        <input type="text" name="search_name" id="searchNameInput" placeholder="Verify Name..." style="padding: 8px 12px; font-size: 12.5px; border-radius: 8px; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 600; text-transform: uppercase; width: 160px; outline: none;" onfocus="document.getElementById('searchIdInput').value = ''" oninput="this.value = this.value.toUpperCase()">
+                        <span style="font-size: 10px; font-weight: 800; color: var(--t-tertiary);">OR</span>
+                        <input type="text" name="biometric_id" id="searchIdInput" pattern="[0-9]*" inputmode="numeric" placeholder="Verify ID..." style="padding: 8px 12px; font-size: 12.5px; border-radius: 8px; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 600; width: 100px; outline: none;" onfocus="document.getElementById('searchNameInput').value = ''">
+                        <button type="submit" class="teacher-primary-btn" style="padding: 8px 16px; min-height: 34px; font-size: 12px; border-radius: 8px;">
+                            Verify Profile
+                        </button>
+                    </form>
                 </div>
-
-                <form method="GET" action="{{ route('teacher.attendance') }}" class="teacher-form" style="display: flex; flex-direction: column; gap: 16px; margin: 0;" onsubmit="return validateSearchForm()">
-                    <label style="margin: 0;">
-                        <span style="font-size: 11px; font-weight: 700; color: var(--t-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Enter First Name or Full Name</span>
-                        <input type="text" name="search_name" id="searchNameInput" placeholder="e.g. ZHAIREL or MON ZHAIREL LINGASA" style="padding: 10px 14px; font-size: 13px; border-radius: 10px; width: 100%; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 600; text-transform: uppercase;" onfocus="document.getElementById('searchIdInput').value = ''" oninput="this.value = this.value.toUpperCase()">
-                    </label>
-
-                    <div style="display: flex; align-items: center; justify-content: center; margin: 8px 0; position: relative;">
-                        <span style="height: 1px; background-color: var(--s-border); flex: 1;"></span>
-                        <span style="font-size: 10px; font-weight: 800; color: var(--t-tertiary); text-transform: uppercase; padding: 0 12px; background-color: var(--s-surface); position: relative; z-index: 2;">OR</span>
-                        <span style="height: 1px; background-color: var(--s-border); flex: 1;"></span>
-                    </div>
-
-                    <label style="margin: 0;">
-                        <span style="font-size: 11px; font-weight: 700; color: var(--t-secondary); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Enter Employee ID (PIN)</span>
-                        <input type="text" name="search_id" id="searchIdInput" pattern="[0-9]*" inputmode="numeric" placeholder="e.g. 22078" style="padding: 10px 14px; font-size: 13px; border-radius: 10px; width: 100%; border: 1px solid var(--s-border); background-color: var(--s-surface); color: var(--t-primary); font-weight: 600;" onfocus="document.getElementById('searchNameInput').value = ''">
-                    </label>
-
-                    <button type="submit" class="teacher-primary-btn" style="background-color: #059669; border-color: #059669; color: white; padding: 12px 20px; font-size: 13px; font-weight: 800; border-radius: 10px; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 10px;">
-                        Verify & View Logs
-                    </button>
-                </form>
             </div>
 
             <script>
@@ -101,6 +92,97 @@
                     return true;
                 }
             </script>
+
+            {{-- Daily Attendance Report table (standalone for public guest) --}}
+            <div class="teacher-panel" style="display:flex; flex-direction:column; gap:20px; padding: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <h3 style="margin:0; font-size:15px; font-weight:700; color:var(--t-primary);">Daily Attendance Report</h3>
+                        <p style="margin:4px 0 0 0; font-size:11px; color:var(--t-tertiary);">Calculated logs sorted by most recent date</p>
+                    </div>
+                    
+                    <form action="{{ route('teacher.attendance') }}" method="GET" style="margin:0; display:flex; align-items:center; relative;">
+                        <input type="hidden" name="time_in" value="{{ $timeIn }}">
+                        <input type="hidden" name="time_out" value="{{ $timeOut }}">
+                        <input type="text" name="search" value="{{ $search }}" placeholder="Search ID, Name..." style="padding: 6px 12px 6px 32px; border-radius: 8px; border:1px solid var(--s-border); font-size: 13px; background-color: var(--s-surface); color: var(--t-primary); width: 240px; outline: none;">
+                        <i data-lucide="search" style="width:14px; height:14px; color:var(--t-tertiary); position:absolute; margin-left: 10px;"></i>
+                    </form>
+                </div>
+
+                <div class="teacher-table-scroll">
+                    <table style="width:100%; border-collapse:collapse; text-align:left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--s-border); font-weight:800; color:var(--t-primary); font-size:13.5px;">
+                                <th style="padding:16px 20px;">Employee</th>
+                                <th style="padding:16px 20px;">Department</th>
+                                <th style="padding:16px 20px;">Date</th>
+                                <th style="padding:16px 20px; text-align:center;">Time In</th>
+                                <th style="padding:16px 20px; text-align:center;">Time Out</th>
+                                <th style="padding:16px 20px; text-align:center;">Total Hours</th>
+                                <th style="padding:16px 20px; text-align:center;">Status</th>
+                                <th style="padding:16px 20px; text-align:center;">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color:#334155; font-size:14.5px;">
+                            @forelse($report as $row)
+                                @php
+                                    $statusColors = [
+                                        'PRESENT' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
+                                        'LATE' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
+                                        'ABSENT' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);',
+                                        'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
+                                        'Late' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
+                                        'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);'
+                                    ];
+                                    $colorStyle = $statusColors[$row['status']] ?? 'background-color:rgba(107, 114, 128, 0.1); color:#475569;';
+                                @endphp
+                                <tr style="border-bottom:1px solid var(--s-border); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--s-surface-hover)'" onmouseout="this.style.backgroundColor='transparent'">
+                                    <td style="padding:16px 20px;">
+                                        <a href="{{ route('teacher.attendance', ['biometric_id' => $row['employee_id']]) }}" style="font-weight:700; color:#059669; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{ $row['name'] }}</a>
+                                        <div style="font-size:11px; color:var(--t-tertiary); font-family:monospace; font-weight:600;">ID: {{ $row['employee_id'] }}</div>
+                                    </td>
+                                    <td style="padding:16px 20px;">{{ $row['department'] }}</td>
+                                    <td style="padding:16px 20px; font-weight:600;">{{ date('M d, Y', strtotime($row['date'])) }}</td>
+                                    <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $row['time_in'] && $row['time_in'] !== '—' ? date('h:i A', strtotime($row['time_in'])) : '—' }}</td>
+                                    <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $row['time_out'] && $row['time_out'] !== '—' ? date('h:i A', strtotime($row['time_out'])) : '—' }}</td>
+                                    <td style="padding:16px 20px; text-align:center; font-weight:700; color:#0f172a;">{{ $row['total_hours_formatted'] ?? '—' }}</td>
+                                    <td style="padding:16px 20px; text-align:center;">
+                                        @if($row['status'])
+                                            <span style="font-size:11px; padding:4px 10px; font-weight:800; border-radius:6px; text-transform:uppercase; display:inline-block; letter-spacing:0.02em; {{ $colorStyle }}">
+                                                {{ $row['status'] }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td style="padding:16px 20px; text-align:center;">
+                                        <span style="font-weight:600; color:#334155;">{{ $row['remarks'] }}</span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" style="padding:32px; text-align:center; color:var(--t-tertiary); font-size:14.5px;">
+                                        No logs registered today.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Pagination --}}
+                @if($totalPages > 1)
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--s-border); padding-top:16px; flex-wrap:wrap; gap:12px;">
+                        <span style="font-size:12px; color:var(--t-tertiary);">Showing page <strong>{{ $page }}</strong> of <strong>{{ $totalPages }}</strong></span>
+                        <div style="display:inline-flex; gap:8px;">
+                            @if($page > 1)
+                                <a href="{{ route('teacher.attendance', ['page' => $page - 1, 'search' => $search, 'time_in' => $timeIn, 'time_out' => $timeOut]) }}" class="teacher-outline-btn" style="padding:6px 12px; font-size:12px; text-decoration:none;">Previous</a>
+                            @endif
+                            @if($page < $totalPages)
+                                <a href="{{ route('teacher.attendance', ['page' => $page + 1, 'search' => $search, 'time_in' => $timeIn, 'time_out' => $timeOut]) }}" class="teacher-outline-btn" style="padding:6px 12px; font-size:12px; text-decoration:none;">Next</a>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+            </div>
         @endif
     @else
             <!-- Title & cutoff paginator -->
@@ -153,8 +235,9 @@
                             Change Link
                         </button>
                     @else
-                        <a href="{{ route('teacher.attendance') }}" class="teacher-outline-btn" style="padding: 6px 12px; font-size:11.5px; min-height:34px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
-                            Change Profile
+                        <a href="{{ route('teacher.attendance') }}" class="teacher-outline-btn" style="padding: 6px 12px; font-size:11.5px; min-height:34px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; border-color:#059669; color:#059669; background-color:rgba(5,150,105,0.02);">
+                            <i data-lucide="arrow-left" style="width:12px; height:12px;"></i>
+                            Public Logs
                         </a>
                     @endif
                 </div>
