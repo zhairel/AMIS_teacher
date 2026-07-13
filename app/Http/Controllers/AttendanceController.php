@@ -39,10 +39,15 @@ class AttendanceController extends Controller
 
         if ($request->has('search_id') && !empty($request->query('search_id'))) {
             $myBiometricId = $request->query('search_id');
-        } elseif ($request->has('search_name') && !empty($request->query('search_name'))) {
+        } elseif ($request->has('first_name') && $request->has('last_name') && !empty($request->query('first_name')) && !empty($request->query('last_name'))) {
+            $firstName = trim($request->query('first_name'));
+            $lastName = trim($request->query('last_name'));
+            
             $matchedUser = DB::table('zk_users')
-                ->where('name', 'like', '%' . $request->query('search_name') . '%')
+                ->where('name', 'like', '%' . $firstName . '%')
+                ->where('name', 'like', '%' . $lastName . '%')
                 ->first();
+                
             if ($matchedUser) {
                 $myBiometricId = $matchedUser->employee_id;
             } else {
