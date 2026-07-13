@@ -24,7 +24,7 @@
         <span class="dash-stat-icon"><i data-lucide="users"></i></span>
         <div>
             <p class="dash-stat-label">Total Students</p>
-            <strong class="dash-stat-value">{{ isset($students) ? $students->count() : 0 }}</strong>
+            <strong class="dash-stat-value">{{ isset($students) ? $students->unique('id')->count() : 0 }}</strong>
         </div>
     </article>
     <article class="dash-stat dash-stat-green">

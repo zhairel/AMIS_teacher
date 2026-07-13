@@ -9,7 +9,7 @@
         ['Classroom Workspaces', $subjects->count(), 'book-open-check', 'green'],
         ['Upcoming Meetings', $meetings->whereNotIn('status', ['Completed'])->count(), 'video', 'blue'],
         ['Recent Announcements', $announcements->count(), 'megaphone', 'violet'],
-        ['Student Count', $students->count(), 'users-round', 'violet'],
+        ['Student Count', $students->unique('id')->count(), 'users-round', 'violet'],
         ['Pending Activities', $assessments->count(), 'clipboard-list', 'amber'],
     ];
 @endphp
@@ -137,7 +137,7 @@
             <p>{{ session('teacher_dept') }}</p>
             <div class="dash-profile-stats">
                 <div class="dash-profile-stat"><strong>{{ $subjects->count() }}</strong><span>Workspaces</span></div>
-                <div class="dash-profile-stat"><strong>{{ $students->count() }}</strong><span>Students</span></div>
+                <div class="dash-profile-stat"><strong>{{ $students->unique('id')->count() }}</strong><span>Students</span></div>
                 <div class="dash-profile-stat"><strong>{{ $meetings->count() }}</strong><span>Meetings</span></div>
             </div>
         </div>

@@ -13,6 +13,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body class="teacher-body">
+@php
+    $academicContexts = app(\App\Services\TeacherPortalService::class)->availableAcademicContexts(request());
+    $activeAcademicContext = session('teacher_academic_context');
+@endphp
 <div class="teacher-shell">
     <aside class="teacher-sidebar">
         <div class="teacher-sidebar-top">
@@ -34,6 +38,7 @@
                     ['route' => 'teacher.students', 'icon' => 'users', 'label' => 'Students', 'tone' => 'violet'],
                     ['route' => 'teacher.announcements', 'icon' => 'megaphone', 'label' => 'Announcements', 'tone' => 'rose'],
                     ['route' => 'teacher.attendance', 'icon' => 'clock', 'label' => 'Attendance', 'tone' => 'emerald'],
+                    ['route' => 'teacher.id', 'icon' => 'id-card', 'label' => 'Digital ID', 'tone' => 'teal'],
                     ['route' => 'teacher.settings', 'icon' => 'settings', 'label' => 'Settings', 'tone' => 'indigo'],
                 ];
             @endphp
@@ -85,6 +90,21 @@
                     <h1>{{ $heading ?? 'Faculty Portal' }}</h1>
                 </div>
                 <div class="teacher-topbar-end">
+                    @if($academicContexts->isNotEmpty())
+                        <form method="POST" action="{{ route('teacher.academic-context') }}" style="margin:0;">
+                            @csrf
+                            <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#64748b;">
+                                Academic access
+                                <select name="context" onchange="this.form.submit()" style="min-width:150px;border:1px solid #dbe1e8;border-radius:8px;padding:8px 30px 8px 10px;background:#fff;font-weight:700;color:#334155;">
+                                    @foreach($academicContexts as $context)
+                                        <option value="{{ $context['key'] }}" @selected($activeAcademicContext === $context['key'])>
+                                            {{ $context['label'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </label>
+                        </form>
+                    @endif
                     <a href="{{ route('teacher.meetings') }}" class="teacher-icon-btn" aria-label="Meetings">
                         <i data-lucide="calendar-clock"></i>
                     </a>

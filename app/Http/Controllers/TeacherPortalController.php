@@ -39,11 +39,29 @@ class TeacherPortalController extends Controller
         ]);
     }
 
+    public function switchAcademicContext(Request $request)
+    {
+        $validated = $request->validate(['context' => ['required', 'string', 'max:80', 'regex:/^(subject|adviser):[0-9]+$/']]);
+        $allowed = $this->portalService->availableAcademicContexts($request);
+        abort_unless($allowed->pluck('key')->contains($validated['context']), 403, 'This Academic assignment is not assigned to your account.');
+
+        $request->session()->put('teacher_academic_context', $validated['context']);
+
+        $selected = $allowed->firstWhere('key', $validated['context']);
+
+        return redirect()->route('teacher.dashboard')->with('success', 'Academic access switched to '.$selected['label'].'.');
+    }
+
     public function subjects(Request $request)
     {
-        return view('teacher.coming-soon', [
-            'heading' => 'Classroom Workspace',
-            'icon' => 'book-open',
+        $data = $this->portalService->getPortalData($request);
+
+        return view('teacher.subjects', [
+            'subjects' => collect($data['subjects']),
+            'students' => collect($data['students']),
+            'materials' => collect($data['materials']),
+            'meetings' => collect($data['meetings']),
+            'announcements' => collect($data['announcements']),
         ]);
     }
 
@@ -65,9 +83,11 @@ class TeacherPortalController extends Controller
 
     public function meetings(Request $request)
     {
-        return view('teacher.coming-soon', [
-            'heading' => 'Meetings',
-            'icon' => 'video',
+        $data = $this->portalService->getPortalData($request);
+
+        return view('teacher.meetings', [
+            'subjects' => collect($data['subjects']),
+            'meetings' => collect($data['meetings']),
         ]);
     }
 
@@ -136,9 +156,32 @@ class TeacherPortalController extends Controller
 
     public function grades(Request $request)
     {
-        return view('teacher.coming-soon', [
-            'heading' => 'Gradebook',
-            'icon' => 'clipboard-list',
+        $data = $this->portalService->getPortalData($request);
+        $subjects = collect($data['subjects'])->filter(fn ($subject) => ! empty($subject['section_subject_id']))->values();
+        $selectedSubjectId = (string) $request->query('subject', $subjects->first()['id'] ?? '');
+        $selectedSubject = $subjects->firstWhere('id', $selectedSubjectId);
+
+        if (! $selectedSubject && $subjects->isNotEmpty()) {
+            $selectedSubject = $subjects->first();
+            $selectedSubjectId = $selectedSubject['id'];
+        }
+
+        $assessments = collect($data['assessments'])
+            ->where('subject_id', $selectedSubjectId)
+            ->values();
+
+        return view('teacher.grades', [
+            'subjects' => $subjects,
+            'selectedSubjectId' => $selectedSubjectId,
+            'selectedSubject' => $selectedSubject,
+            'students' => collect($data['students'])
+                ->where('section_subject_id', $selectedSubject['section_subject_id'] ?? null)
+                ->values(),
+            'assessments' => $assessments,
+            'scores' => $data['scores'],
+            'submission' => $selectedSubject
+                ? $this->portalService->gradeSubmissionFor($request, $selectedSubject['section_subject_id'])
+                : null,
         ]);
     }
 
@@ -158,6 +201,41 @@ class TeacherPortalController extends Controller
         return redirect()->route('teacher.grades', ['subject' => $validated['subject_id']])->with('success', 'Scores saved.');
     }
 
+    public function submitGrades(Request $request, string $subject)
+    {
+        $this->portalService->submitGrades($request, $subject);
+
+        return redirect()->route('teacher.grades', ['subject' => $subject])->with('success', 'Grades submitted for Academic review.');
+    }
+
+    public function exportGrades(Request $request, string $subject)
+    {
+        $workspace = $this->portalService->workspace($request, $subject);
+        $data = $this->portalService->getPortalData($request);
+        $assessments = collect($data['assessments'])->where('subject_id', $subject)->values();
+        $students = collect($workspace['subjectStudents']);
+        $scores = $data['scores'];
+
+        return response()->streamDownload(function () use ($workspace, $assessments, $students, $scores) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, array_merge(['Student Number', 'Student'], $assessments->pluck('title')->all(), ['Average']));
+            foreach ($students as $student) {
+                $percentages = [];
+                $row = [$student['student_no'], $student['name']];
+                foreach ($assessments as $assessment) {
+                    $score = $scores[$student['id'].':'.$assessment['id']] ?? null;
+                    $row[] = $score;
+                    if ($score !== null && $score !== '') {
+                        $percentages[] = ((float) $score / (float) $assessment['max_score']) * 100;
+                    }
+                }
+                $row[] = $percentages ? round(array_sum($percentages) / count($percentages), 2) : null;
+                fputcsv($handle, $row);
+            }
+            fclose($handle);
+        }, 'gradebook-'.\Illuminate\Support\Str::slug($workspace['subject']['name']).'.csv', ['Content-Type' => 'text/csv']);
+    }
+
     public function students(Request $request)
     {
         $data = $this->portalService->getPortalData($request);
@@ -167,7 +245,7 @@ class TeacherPortalController extends Controller
         $advisorySections = \App\Models\Section::whereIn('id', $advisorySectionIds)->get()->map(function ($section) use ($data) {
             return [
                 'title' => 'Advisory: ' . $section->section_title . ' (' . $section->learning_mode . ')',
-                'students' => collect($data['students'])->where('section_id', $section->id)->values(),
+                'students' => collect($data['students'])->where('section_id', $section->id)->unique('id')->values(),
             ];
         })->filter(fn($sec) => $sec['students']->isNotEmpty());
 
@@ -551,5 +629,76 @@ class TeacherPortalController extends Controller
         $redirectUrl = "{$ebookPortalUrl}/sso/login?sso_token={$token}&redirect=/books/{$book->id}";
 
         return redirect()->away($redirectUrl);
+    }
+
+    public function digitalId(Request $request)
+    {
+        $myBiometricId = $request->query('biometric_id') ?: $request->query('id');
+        $searchName = $request->query('search_name');
+
+        $selectedBiometricUser = null;
+        $isAuthenticated = (bool) $request->session()->get('teacher_portal_authenticated');
+        $loggedInEmail = $request->session()->get('teacher_email');
+
+        // 1. If not specified, but logged in, get current teacher's biometric ID
+        if (!$myBiometricId && !$searchName && $isAuthenticated && $loggedInEmail) {
+            $user = User::where('email', $loggedInEmail)->first();
+            $myBiometricId = $user ? $user->biometric_id : null;
+        }
+
+        // 2. Look up by search name if query is active
+        if (!$myBiometricId && $searchName) {
+            $matchedUser = \Illuminate\Support\Facades\DB::table('zk_users')
+                ->where('name', 'like', '%' . $searchName . '%')
+                ->first();
+            if ($matchedUser) {
+                $myBiometricId = $matchedUser->employee_id;
+            } else {
+                return redirect()->route('teacher.id')->with('error', 'Faculty member not found in biometric directory.');
+            }
+        }
+
+        // 3. Load user details
+        if ($myBiometricId) {
+            $selectedBiometricUser = \Illuminate\Support\Facades\DB::table('zk_users')->where('employee_id', $myBiometricId)->first();
+        }
+
+        $displayName = 'Faculty Member';
+        $departmentName = 'Islamic School and Arabic Language Department';
+
+        if ($selectedBiometricUser) {
+            $displayName = $selectedBiometricUser->name;
+            // Resolve department name
+            $dept = \Illuminate\Support\Facades\DB::table('zk_departments')->where('id', $selectedBiometricUser->department_id)->first();
+            $departmentName = $dept ? $dept->name : 'Main Department';
+        } elseif ($isAuthenticated) {
+            $displayName = $request->session()->get('teacher_name', 'Faculty Member');
+            $departmentName = $request->session()->get('teacher_dept', 'Islamic School and Arabic Language Department');
+        }
+
+        // 4. Generate barcode & QR code urls
+        $barcodeUrl = null;
+        $qrCodeUrl = null;
+        if ($myBiometricId) {
+            // Standard Code128 Barcode containing the raw Employee ID PIN
+            $barcodeUrl = 'https://bwipjs-api.metafloor.com/?bcid=code128&text=' . urlencode($myBiometricId) . '&scale=3&rotate=N&includecheck=true';
+            
+            // Standard High-Contrast QR Code containing the raw Employee ID PIN (for optical scanners / camera attendance loggers)
+            $qrCodeUrl = 'https://quickchart.io/qr?text=' . urlencode($myBiometricId) . '&dark=000000&light=ffffff&margin=1&format=png&size=300';
+        }
+
+        // Fetch all zk users for picker fallback (in case they want to search or link)
+        $zkUsers = \Illuminate\Support\Facades\DB::table('zk_users')->orderBy('name')->get()->map(fn($u) => (array)$u)->toArray();
+
+        return view('teacher.digital-id', [
+            'myBiometricId' => $myBiometricId,
+            'selectedBiometricUser' => $selectedBiometricUser,
+            'displayName' => $displayName,
+            'departmentName' => $departmentName,
+            'barcodeUrl' => $barcodeUrl,
+            'qrCodeUrl' => $qrCodeUrl,
+            'zkUsers' => $zkUsers,
+            'isAuthenticated' => $isAuthenticated,
+        ]);
     }
 }

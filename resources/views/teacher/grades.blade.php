@@ -1,6 +1,18 @@
 @extends('teacher.layout', ['heading' => 'Gradebook'])
 
 @section('content')
+@if($subjects->isEmpty())
+    <div class="teacher-panel">
+        <div class="dash-empty" style="padding:48px 24px;">
+            <i data-lucide="book-open"></i>
+            <p>No section-linked subjects have been assigned to your account yet.</p>
+        </div>
+    </div>
+@else
+<div class="teacher-panel" style="margin-bottom:16px; border-left:4px solid {{ ($submission?->status ?? 'draft') === 'draft' ? '#f59e0b' : '#2563eb' }};">
+    <strong style="display:block;">Status: {{ ucfirst($submission?->status ?? 'draft') }}</strong>
+    <span style="font-size:13px; color:#475569;">Drafts remain editable. Submitted grades wait for Academic review and cannot be changed.</span>
+</div>
 {{-- Toolbar --}}
 <div class="teacher-toolbar-panel">
     <form method="GET" action="{{ route('teacher.grades') }}" class="teacher-form teacher-inline-form">
@@ -81,7 +93,17 @@
         </table>
     </div>
     <div class="teacher-table-footer">
-        <button type="submit" class="teacher-primary-btn"><i data-lucide="save"></i> Save Scores</button>
+        <a href="{{ route('teacher.grades.export', $selectedSubjectId) }}" class="teacher-outline-btn"><i data-lucide="download"></i> Export CSV</a>
+        @if(($submission?->status ?? 'draft') === 'draft' || ($submission?->status ?? '') === 'returned')
+            <button type="submit" class="teacher-primary-btn"><i data-lucide="save"></i> Save Scores</button>
+        @endif
     </div>
 </form>
+@if(($submission?->status ?? 'draft') === 'draft' || ($submission?->status ?? '') === 'returned')
+    <form method="POST" action="{{ route('teacher.grades.submit', $selectedSubjectId) }}" style="margin-top:16px; text-align:right;" onsubmit="return confirm('Submit grades for Academic review? Editing will be locked until returned.')">
+        @csrf
+        <button class="teacher-primary-btn"><i data-lucide="send"></i> Submit for Review</button>
+    </form>
+@endif
+@endif
 @endsection

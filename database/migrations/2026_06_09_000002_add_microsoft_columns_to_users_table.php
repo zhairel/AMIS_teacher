@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (! Schema::hasColumn('users', 'microsoft_id')) {
-                $table->string('microsoft_id')->nullable()->after('firebase_linked_at');
+                $column = $table->string('microsoft_id')->nullable();
+                if (Schema::hasColumn('users', 'firebase_linked_at')) {
+                    $column->after('firebase_linked_at');
+                }
             }
             if (! Schema::hasColumn('users', 'microsoft_email')) {
                 $table->string('microsoft_email')->nullable()->after('microsoft_id');

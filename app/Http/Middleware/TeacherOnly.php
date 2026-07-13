@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\User;
 use App\Services\TeacherAuthService;
+use App\Services\TeacherPortalService;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -52,6 +53,12 @@ class TeacherOnly
                 $request->session()->put('teacher_name', $resolved['name'] ?? $user->name);
                 $request->session()->put('teacher_dept', $resolved['dept'] ?? 'Islamic School and Arabic Language Department');
             }
+        }
+
+        $contexts = resolve(TeacherPortalService::class)->availableAcademicContexts($request);
+        $activeContext = $request->session()->get('teacher_academic_context');
+        if (! $activeContext || ! $contexts->pluck('key')->contains($activeContext)) {
+            $request->session()->put('teacher_academic_context', $contexts->first()['key'] ?? null);
         }
 
         return $next($request);

@@ -14,6 +14,7 @@ tar -czf $ARCHIVE_NAME \
     resources/views/teacher/meetings.blade.php \
     resources/views/teacher/subject-workspace.blade.php \
     resources/views/teacher/layout.blade.php \
+    resources/views/teacher/digital-id.blade.php \
     resources/views/teacher/announcements.blade.php \
     resources/views/teacher/attendance/index.blade.php \
     app/Http/Controllers/AttendanceController.php \

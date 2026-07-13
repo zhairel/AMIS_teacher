@@ -6,6 +6,10 @@ use App\DTOs\AnnouncementData;
 use App\DTOs\AssessmentData;
 use App\DTOs\MeetingData;
 use App\Models\ClassAdvisoryAssignment;
+use App\Models\GradebookAssessment;
+use App\Models\GradebookAuditLog;
+use App\Models\GradebookScore;
+use App\Models\GradeSubmission;
 use App\Models\LearningMaterial;
 use App\Models\Section;
 use App\Models\SectionSubject;
@@ -64,13 +68,27 @@ class TeacherPortalService
         $advisorySectionIds = $this->advisorySectionsFor($request);
         $students = $this->studentsFor($subjects, $advisorySectionIds);
 
+        $assessments = GradebookAssessment::with('scores')
+            ->whereIn('section_subject_id', $sectionSubjectIds)
+            ->orderBy('assessment_date')
+            ->get();
+
         return [
             'subjects' => $subjects->values()->all(),
             'meetings' => $meetings->values()->all(),
             'materials' => $materials->values()->all(),
-            'assessments' => $request->session()->get('teacher_assessments', []),
+            'assessments' => $assessments->map(fn ($assessment) => [
+                'id' => (string) $assessment->id,
+                'subject_id' => 'section-subject-'.$assessment->section_subject_id,
+                'title' => $assessment->title,
+                'max_score' => $assessment->max_score,
+                'date' => $assessment->assessment_date->toDateString(),
+                'grading_period' => $assessment->grading_period,
+            ])->all(),
             'students' => $students->values()->all(),
-            'scores' => $request->session()->get('teacher_scores', []),
+            'scores' => $assessments->flatMap(fn ($assessment) => $assessment->scores->mapWithKeys(
+                fn ($score) => [$score->student_id.':'.$assessment->id => $score->score]
+            ))->all(),
             'announcements' => $announcements->values()->all(),
         ];
     }
@@ -144,20 +162,74 @@ class TeacherPortalService
 
     public function storeAssessment(Request $request, AssessmentData $dto): void
     {
-        $items = $request->session()->get('teacher_assessments', []);
-        array_unshift($items, array_merge(['id' => 'assessment-'.now()->timestamp], $dto->toArray()));
-        $request->session()->put('teacher_assessments', $items);
+        $subject = $this->resolveSubject($request, $dto->subjectId);
+        abort_unless($subject['section_subject_id'], 422, 'The subject must be linked to a section.');
+        $this->ensureGradebookEditable($request, $subject['section_subject_id']);
+
+        $assessment = GradebookAssessment::create([
+            'section_subject_id' => $subject['section_subject_id'],
+            'subject_id' => $subject['subject_id'],
+            'teacher_key' => $this->teacherKey($request),
+            'title' => $dto->title,
+            'max_score' => $dto->maxScore,
+            'assessment_date' => $dto->date,
+            'grading_period' => 'Current',
+        ]);
+        $this->audit($request, $subject['section_subject_id'], 'assessment_created', 'assessment', $assessment->id);
     }
 
     public function storeScores(Request $request, string $subjectId, array $studentScores): void
     {
-        $scores = $request->session()->get('teacher_scores', []);
+        $subject = $this->resolveSubject($request, $subjectId);
+        abort_unless($subject['section_subject_id'], 422, 'The subject must be linked to a section.');
+        $this->ensureGradebookEditable($request, $subject['section_subject_id']);
+        $assessmentIds = GradebookAssessment::where('section_subject_id', $subject['section_subject_id'])->pluck('id');
+
         foreach ($studentScores as $studentId => $assessmentScores) {
             foreach ($assessmentScores as $assessmentId => $score) {
-                $scores[$studentId.':'.$assessmentId] = ($score === null || $score === '') ? null : (int) $score;
+                $assessment = GradebookAssessment::whereKey($assessmentId)->whereIn('id', $assessmentIds)->firstOrFail();
+                abort_if($score !== null && $score !== '' && (float) $score > $assessment->max_score, 422, 'A score exceeds the assessment maximum.');
+                GradebookScore::updateOrCreate(
+                    ['assessment_id' => $assessment->id, 'student_id' => (int) $studentId],
+                    ['score' => ($score === null || $score === '') ? null : $score, 'teacher_key' => $this->teacherKey($request)]
+                );
             }
         }
-        $request->session()->put('teacher_scores', $scores);
+        $this->audit($request, $subject['section_subject_id'], 'scores_saved');
+    }
+
+    public function submitGrades(Request $request, string $workspaceId): GradeSubmission
+    {
+        $subject = $this->resolveSubject($request, $workspaceId);
+        abort_unless($subject['section_subject_id'], 422, 'The subject must be linked to a section.');
+        $this->ensureGradebookEditable($request, $subject['section_subject_id']);
+        abort_if(GradebookAssessment::where('section_subject_id', $subject['section_subject_id'])->doesntExist(), 422, 'Add at least one assessment before submitting.');
+
+        $submission = GradeSubmission::updateOrCreate(
+            ['section_subject_id' => $subject['section_subject_id'], 'grading_period' => 'Current'],
+            ['teacher_key' => $this->teacherKey($request), 'status' => 'submitted', 'submitted_at' => now(), 'review_notes' => null]
+        );
+        $this->audit($request, $subject['section_subject_id'], 'grades_submitted', 'submission', $submission->id);
+        return $submission;
+    }
+
+    public function gradeSubmissionFor(Request $request, int $sectionSubjectId): GradeSubmission
+    {
+        return GradeSubmission::firstOrCreate(
+            ['section_subject_id' => $sectionSubjectId, 'grading_period' => 'Current'],
+            ['teacher_key' => $this->teacherKey($request), 'status' => 'draft']
+        );
+    }
+
+    private function ensureGradebookEditable(Request $request, int $sectionSubjectId): void
+    {
+        $submission = GradeSubmission::where('section_subject_id', $sectionSubjectId)->where('grading_period', 'Current')->first();
+        abort_if($submission && in_array($submission->status, ['submitted', 'approved', 'locked'], true), 423, 'Grades are not editable while submitted or locked.');
+    }
+
+    private function audit(Request $request, int $sectionSubjectId, string $action, ?string $type = null, ?int $id = null): void
+    {
+        GradebookAuditLog::create(['section_subject_id' => $sectionSubjectId, 'teacher_key' => $this->teacherKey($request), 'action' => $action, 'record_type' => $type, 'record_id' => $id]);
     }
 
     public function storeAnnouncement(Request $request, AnnouncementData $dto): void
@@ -306,6 +378,11 @@ class TeacherPortalService
 
     private function subjectsFor(Request $request): Collection
     {
+        $context = (string) $request->session()->get('teacher_academic_context');
+        if (str_starts_with($context, 'adviser:')) {
+            return collect();
+        }
+
         $teacherKey = $this->teacherKey($request);
         $teacherName = $request->session()->get('teacher_name');
         $teacherEmail = $request->session()->get('teacher_email');
@@ -361,11 +438,22 @@ class TeacherPortalService
             return $this->sectionSubjectArray($sectionSubject, $catalogSubject);
         });
 
-        return $assignedSubjects->concat($directSubjects)->unique('id')->values();
+        $subjects = $assignedSubjects->concat($directSubjects)->unique('id')->values();
+        if (str_starts_with($context, 'subject:')) {
+            $subjectId = (int) Str::after($context, 'subject:');
+            $subjects = $subjects->where('subject_id', $subjectId)->values();
+        }
+
+        return $subjects;
     }
 
     public function advisorySectionsFor(Request $request): Collection
     {
+        $context = (string) $request->session()->get('teacher_academic_context');
+        if (str_starts_with($context, 'subject:')) {
+            return collect();
+        }
+
         $teacherKey = $this->teacherKey($request);
         $teacherName = $request->session()->get('teacher_name');
         $teacherEmail = $request->session()->get('teacher_email');
@@ -411,7 +499,55 @@ class TeacherPortalService
             }
         }
 
-        return $dbSectionIds->concat($configSectionIds)->unique();
+        $sectionIds = $dbSectionIds->concat($configSectionIds)->unique();
+        if (str_starts_with($context, 'adviser:')) {
+            $sectionIds = $sectionIds->intersect([(int) Str::after($context, 'adviser:')]);
+        }
+
+        return $sectionIds;
+    }
+
+    public function availableAcademicContexts(Request $request): Collection
+    {
+        $teacherKey = $this->teacherKey($request);
+        $teacherEmail = $request->session()->get('teacher_email');
+        $teacherName = $request->session()->get('teacher_name');
+        $subjectAssignments = TeacherSubjectAssignment::with('subject')
+            ->where('status', 'active')
+            ->where(function ($query) use ($teacherKey, $teacherEmail) {
+                $query->where('teacher_key', $teacherKey);
+                if ($teacherEmail) {
+                    $query->orWhere('teacher_email', $teacherEmail);
+                }
+            })->get()
+            ->filter(fn ($assignment) => $assignment->subject)
+            ->unique('subject_id')
+            ->map(fn ($assignment) => [
+                'key' => 'subject:'.$assignment->subject_id,
+                'type' => 'subject',
+                'label' => $assignment->subject->name.($assignment->subject->grade_level ? ' · '.$assignment->subject->grade_level : ''),
+            ]);
+
+        $advisoryAssignments = ClassAdvisoryAssignment::with('section')
+            ->where('status', 'active')
+            ->where(function ($query) use ($teacherKey, $teacherEmail, $teacherName) {
+                $query->where('teacher_key', $teacherKey);
+                if ($teacherEmail) {
+                    $query->orWhere('teacher_email', $teacherEmail);
+                }
+                if ($teacherName) {
+                    $query->orWhere('teacher_name', $teacherName);
+                }
+            })->get()
+            ->filter(fn ($assignment) => $assignment->section)
+            ->unique('section_id')
+            ->map(fn ($assignment) => [
+                'key' => 'adviser:'.$assignment->section_id,
+                'type' => 'adviser',
+                'label' => 'Adviser · '.$assignment->section->section_title,
+            ]);
+
+        return $subjectAssignments->concat($advisoryAssignments)->values();
     }
 
     private function studentsFor(Collection $subjects, Collection $advisorySectionIds): Collection
@@ -422,15 +558,34 @@ class TeacherPortalService
         return StudentSection::with(['student.user', 'student.applicant'])
             ->whereIn('section_id', $allSectionIds)
             ->get()
-            ->map(fn ($row) => [
-                'id' => 'stu-'.$row->student_id,
-                'section_subject_id' => $subjects->firstWhere('section_id', $row->section_id)['section_subject_id'] ?? null,
-                'name' => $row->student?->user?->name ?? 'Student '.$row->student_id,
-                'student_no' => $row->student?->student_number ?? 'N/A',
-                'grade' => $row->student?->grade_level ?? '',
-                'section' => $row->student?->section ?? '',
-                'photo_url' => EnrollmentStorage::url($row->student?->applicant?->photo_2x2_url),
-            ]);
+            ->flatMap(function ($row) use ($subjects, $advisorySectionIds) {
+                $base = [
+                    'id' => $row->student_id,
+                    'section_id' => $row->section_id,
+                    'name' => $row->student?->user?->name ?? 'Student '.$row->student_id,
+                    'student_no' => $row->student?->student_number ?? 'N/A',
+                    'grade' => $row->student?->grade_level ?? '',
+                    'section' => $row->student?->section ?? '',
+                    'photo_url' => EnrollmentStorage::url($row->student?->applicant?->photo_2x2_url),
+                ];
+
+                // A learner must appear in every subject workspace assigned to
+                // the teacher, not only the first subject found for a section.
+                $subjectRows = $subjects
+                    ->where('section_id', $row->section_id)
+                    ->whereNotNull('section_subject_id')
+                    ->map(fn ($subject) => $base + ['section_subject_id' => $subject['section_subject_id']]);
+
+                // Keep an adviser-only roster entry even when the adviser has
+                // no subject assignment for this section.
+                if ($subjectRows->isEmpty() && $advisorySectionIds->contains($row->section_id)) {
+                    return [$base + ['section_subject_id' => null]];
+                }
+
+                return $subjectRows;
+            })
+            ->unique(fn ($student) => $student['id'].'|'.($student['section_subject_id'] ?? 'advisory'))
+            ->values();
     }
 
     private function catalogSubjectArray(?Subject $subject): ?array

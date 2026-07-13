@@ -23,8 +23,12 @@ Route::get('/attendance/users/download', [App\Http\Controllers\AttendanceControl
 Route::post('/attendance/link', [App\Http\Controllers\AttendanceController::class, 'linkBiometricProfile'])->name('teacher.attendance.link');
 Route::post('/attendance/remarks', [App\Http\Controllers\AttendanceController::class, 'storeRemark'])->name('teacher.attendance.remarks.store');
 
+// Teacher Digital ID Card (Public/Private)
+Route::get('/id', [TeacherPortalController::class, 'digitalId'])->name('teacher.id');
+
 Route::middleware('teacher')->group(function () {
     Route::post('/logout', [TeacherAuthController::class, 'logout'])->name('teacher.logout');
+    Route::post('/academic-context', [TeacherPortalController::class, 'switchAcademicContext'])->name('teacher.academic-context');
 
     Route::get('/dashboard', [TeacherPortalController::class, 'dashboard'])->name('teacher.dashboard');
     Route::get('/subjects', [TeacherPortalController::class, 'subjects'])->name('teacher.subjects');
@@ -42,6 +46,8 @@ Route::middleware('teacher')->group(function () {
     Route::get('/grades', [TeacherPortalController::class, 'grades'])->name('teacher.grades');
     Route::post('/grades/assessments', [TeacherPortalController::class, 'storeAssessment'])->name('teacher.assessments.store');
     Route::post('/grades/scores', [TeacherPortalController::class, 'storeScores'])->name('teacher.grades.scores.store');
+    Route::post('/grades/{subject}/submit', [TeacherPortalController::class, 'submitGrades'])->name('teacher.grades.submit');
+    Route::get('/grades/{subject}/export', [TeacherPortalController::class, 'exportGrades'])->name('teacher.grades.export');
 
     Route::get('/students', [TeacherPortalController::class, 'students'])->name('teacher.students');
     Route::get('/ebook', [TeacherPortalController::class, 'ebook'])->name('teacher.ebook');
