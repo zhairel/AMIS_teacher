@@ -345,96 +345,100 @@
                 }
             @endphp
             <div id="attendanceCalendarView" style="display:none; margin-top:16px;">
-                <!-- Day Names Header -->
-                <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-bottom:12px; text-align:center;">
-                    @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $dayName)
-                        <div style="font-size:12px; font-weight:800; color:var(--t-tertiary); text-transform:uppercase; letter-spacing:0.05em;">{{ $dayName }}</div>
-                    @endforeach
-                </div>
-
-                <!-- Calendar Days Grid -->
-                <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;">
-                    <!-- Trailing blank squares for start of week -->
-                    @for($i = 0; $i < $startOfWeek; $i++)
-                        <div style="background-color:rgba(241, 245, 249, 0.2); border:1px dashed var(--s-border); border-radius:8px; min-height:105px;"></div>
-                    @endfor
-
-                    <!-- Days of the Month -->
-                    @for($dayNum = 1; $dayNum <= $daysInMonth; $dayNum++)
-                        @php
-                            $dateStr = sprintf('%04d-%02d-%02d', $myYear, $myMonth, $dayNum);
-                            $isDateActive = ($dateStr >= $myStartDate && $dateStr <= $myEndDate);
-                            $cDayOfWeek = (int)(new \DateTime($dateStr))->format('N'); // 1=Mon, 5=Fri, 6=Sat, 7=Sun
-                            $log = $logsByDate[$dateStr] ?? null;
-                        @endphp
-                        
-                        <div style="border:1px solid var(--s-border); border-radius:10px; min-height:105px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; transition: transform 0.2s, box-shadow 0.2s;
-                            @if($isDateActive)
-                                background-color:var(--s-surface);
-                                box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-                            @else
-                                background-color:rgba(241, 245, 249, 0.45);
-                                opacity: 0.65;
-                            @endif
-                        " onmouseover="if({{ $isDateActive ? 'true' : 'false' }}) { this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'; }" onmouseout="this.style.transform='none'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)';">
-                            <!-- Top Row: Date Number and Day Label -->
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span style="font-size:11px; font-weight:700; color:var(--t-tertiary);">{{ (new \DateTime($dateStr))->format('D') }}</span>
-                                <span style="font-size:14px; font-weight:800; @if($isDateActive) color:#0f172a; @else color:var(--t-tertiary); @endif">{{ $dayNum }}</span>
-                            </div>
-
-                            <!-- Center Area: Time In / Time Out -->
-                            <div style="margin:8px 0; display:flex; flex-direction:column; gap:2px; text-align:center;">
-                                @if($isDateActive && $log)
-                                    @if($log['time_in'] && $log['time_in'] !== '—')
-                                        <div style="font-size:11px; font-weight:700; color:#059669; background-color:rgba(16, 185, 129, 0.08); border-radius:4px; padding:2px 4px; font-family:monospace;">
-                                            In: {{ date('h:i A', strtotime($log['time_in'])) }}
-                                        </div>
-                                    @endif
-                                    @if($log['time_out'] && $log['time_out'] !== '—')
-                                        <div style="font-size:11px; font-weight:700; color:#4f46e5; background-color:rgba(99, 102, 241, 0.08); border-radius:4px; padding:2px 4px; font-family:monospace;">
-                                            Out: {{ date('h:i A', strtotime($log['time_out'])) }}
-                                        </div>
-                                    @endif
-                                @endif
-                            </div>
-
-                            <!-- Bottom Row: Status Badge -->
-                            <div style="text-align:center;">
-                                @if($isDateActive && $log && $log['status'])
-                                    @php
-                                        $statusColors = [
-                                            'PRESENT' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3);',
-                                            'LATE' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.3);',
-                                            'ABSENT' => 'background-color:rgba(239, 68, 68, 0.1); color:#dc2626; border:1px solid rgba(239, 68, 68, 0.3);',
-                                            'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3);',
-                                            'Late' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.3);',
-                                            'Absent' => 'background-color:rgba(239, 68, 68, 0.1); color:#dc2626; border:1px solid rgba(239, 68, 68, 0.3);'
-                                        ];
-                                        $colorStyle = $statusColors[$log['status']] ?? 'background-color:rgba(107, 114, 128, 0.1); color:#475569;';
-                                    @endphp
-                                    <span style="font-size:9px; padding:2px 6px; font-weight:800; border-radius:4px; text-transform:uppercase; letter-spacing:0.01em; display:inline-block; {{ $colorStyle }}">
-                                        {{ $log['status'] }}
-                                    </span>
-                                @elseif($isDateActive && !$log)
-                                    @if($cDayOfWeek === 5 && (new \DateTime($dateStr)) < (new \DateTime()))
-                                        <span style="font-size:9px; padding:2px 6px; font-weight:800; border-radius:4px; text-transform:uppercase; background-color:rgba(59, 130, 246, 0.1); color:#1d4ed8; border:1px solid rgba(59, 130, 246, 0.3); display:inline-block;">
-                                            REST DAY
-                                        </span>
-                                    @endif
-                                @endif
-                            </div>
+                <div class="teacher-table-scroll" style="border: none; padding: 0; background: transparent; box-shadow: none; overflow-x: auto; width: 100%;">
+                    <div style="min-width: 750px; box-sizing: border-box; width: 100%;">
+                        <!-- Day Names Header -->
+                        <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-bottom:12px; text-align:center;">
+                            @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $dayName)
+                                <div style="font-size:12px; font-weight:800; color:var(--t-tertiary); text-transform:uppercase; letter-spacing:0.05em;">{{ $dayName }}</div>
+                            @endforeach
                         </div>
-                    @endfor
-
-                    <!-- Leading blank squares for end of week -->
-                    @php
-                        $totalCells = $startOfWeek + $daysInMonth;
-                        $remaining = (7 - ($totalCells % 7)) % 7;
-                    @endphp
-                    @for($i = 0; $i < $remaining; $i++)
-                        <div style="background-color:rgba(241, 245, 249, 0.2); border:1px dashed var(--s-border); border-radius:8px; min-height:105px;"></div>
-                    @endfor
+        
+                        <!-- Calendar Days Grid -->
+                        <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;">
+                            <!-- Trailing blank squares for start of week -->
+                            @for($i = 0; $i < $startOfWeek; $i++)
+                                <div style="background-color:rgba(241, 245, 249, 0.2); border:1px dashed var(--s-border); border-radius:8px; min-height:105px;"></div>
+                            @endfor
+        
+                            <!-- Days of the Month -->
+                            @for($dayNum = 1; $dayNum <= $daysInMonth; $dayNum++)
+                                @php
+                                    $dateStr = sprintf('%04d-%02d-%02d', $myYear, $myMonth, $dayNum);
+                                    $isDateActive = ($dateStr >= $myStartDate && $dateStr <= $myEndDate);
+                                    $cDayOfWeek = (int)(new \DateTime($dateStr))->format('N'); // 1=Mon, 5=Fri, 6=Sat, 7=Sun
+                                    $log = $logsByDate[$dateStr] ?? null;
+                                @endphp
+                                
+                                <div style="border:1px solid var(--s-border); border-radius:10px; min-height:105px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; transition: transform 0.2s, box-shadow 0.2s;
+                                    @if($isDateActive)
+                                        background-color:var(--s-surface);
+                                        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+                                    @else
+                                        background-color:rgba(241, 245, 249, 0.45);
+                                        opacity: 0.65;
+                                    @endif
+                                " onmouseover="if({{ $isDateActive ? 'true' : 'false' }}) { this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05)'; }" onmouseout="this.style.transform='none'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.02)';">
+                                    <!-- Top Row: Date Number and Day Label -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="font-size:11px; font-weight:700; color:var(--t-tertiary);">{{ (new \DateTime($dateStr))->format('D') }}</span>
+                                        <span style="font-size:14px; font-weight:800; @if($isDateActive) color:#0f172a; @else color:var(--t-tertiary); @endif">{{ $dayNum }}</span>
+                                    </div>
+        
+                                    <!-- Center Area: Time In / Time Out -->
+                                    <div style="margin:8px 0; display:flex; flex-direction:column; gap:2px; text-align:center;">
+                                        @if($isDateActive && $log)
+                                            @if($log['time_in'] && $log['time_in'] !== '—')
+                                                <div style="font-size:11px; font-weight:700; color:#059669; background-color:rgba(16, 185, 129, 0.08); border-radius:4px; padding:2px 4px; font-family:monospace;">
+                                                    In: {{ date('h:i A', strtotime($log['time_in'])) }}
+                                                </div>
+                                            @endif
+                                            @if($log['time_out'] && $log['time_out'] !== '—')
+                                                <div style="font-size:11px; font-weight:700; color:#4f46e5; background-color:rgba(99, 102, 241, 0.08); border-radius:4px; padding:2px 4px; font-family:monospace;">
+                                                    Out: {{ date('h:i A', strtotime($log['time_out'])) }}
+                                                </div>
+                                            @endif
+                                        @endif
+                                    </div>
+        
+                                    <!-- Bottom Row: Status Badge -->
+                                    <div style="text-align:center;">
+                                        @if($isDateActive && $log && $log['status'])
+                                            @php
+                                                $statusColors = [
+                                                    'PRESENT' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3);',
+                                                    'LATE' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.3);',
+                                                    'ABSENT' => 'background-color:rgba(239, 68, 68, 0.1); color:#dc2626; border:1px solid rgba(239, 68, 68, 0.3);',
+                                                    'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3);',
+                                                    'Late' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.3);',
+                                                    'Absent' => 'background-color:rgba(239, 68, 68, 0.1); color:#dc2626; border:1px solid rgba(239, 68, 68, 0.3);'
+                                                ];
+                                                $colorStyle = $statusColors[$log['status']] ?? 'background-color:rgba(107, 114, 128, 0.1); color:#475569;';
+                                            @endphp
+                                            <span style="font-size:9px; padding:2px 6px; font-weight:800; border-radius:4px; text-transform:uppercase; letter-spacing:0.01em; display:inline-block; {{ $colorStyle }}">
+                                                {{ $log['status'] }}
+                                            </span>
+                                        @elseif($isDateActive && !$log)
+                                            @if($cDayOfWeek === 5 && (new \DateTime($dateStr)) < (new \DateTime()))
+                                                <span style="font-size:9px; padding:2px 6px; font-weight:800; border-radius:4px; text-transform:uppercase; background-color:rgba(59, 130, 246, 0.1); color:#1d4ed8; border:1px solid rgba(59, 130, 246, 0.3); display:inline-block;">
+                                                    REST DAY
+                                                </span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+                            @endfor
+        
+                            <!-- Leading blank squares for end of week -->
+                            @php
+                                $totalCells = $startOfWeek + $daysInMonth;
+                                $remaining = (7 - ($totalCells % 7)) % 7;
+                            @endphp
+                            @for($i = 0; $i < $remaining; $i++)
+                                <div style="background-color:rgba(241, 245, 249, 0.2); border:1px dashed var(--s-border); border-radius:8px; min-height:105px;"></div>
+                            @endfor
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
