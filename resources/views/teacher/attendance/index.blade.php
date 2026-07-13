@@ -285,10 +285,10 @@
                                 $statusColors = [
                                     'PRESENT' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
                                     'LATE' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
-                                    'ABSENT' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);',
+                                    'ABSENT' => 'background-color:rgba(239, 68, 68, 0.1); color:#dc2626; border:1px solid rgba(239, 68, 68, 0.35);',
                                     'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
                                     'Late' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
-                                    'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);'
+                                    'Absent' => 'background-color:rgba(239, 68, 68, 0.1); color:#dc2626; border:1px solid rgba(239, 68, 68, 0.35);'
                                 ];
                                 $colorStyle = $statusColors[$log['status']] ?? 'background-color:rgba(107, 114, 128, 0.1); color:#475569;';
                             @endphp
@@ -406,10 +406,10 @@
                                         $statusColors = [
                                             'PRESENT' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3);',
                                             'LATE' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.3);',
-                                            'ABSENT' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.3);',
+                                            'ABSENT' => 'background-color:rgba(239, 68, 68, 0.1); color:#dc2626; border:1px solid rgba(239, 68, 68, 0.3);',
                                             'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.3);',
                                             'Late' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.3);',
-                                            'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.3);'
+                                            'Absent' => 'background-color:rgba(239, 68, 68, 0.1); color:#dc2626; border:1px solid rgba(239, 68, 68, 0.3);'
                                         ];
                                         $colorStyle = $statusColors[$log['status']] ?? 'background-color:rgba(107, 114, 128, 0.1); color:#475569;';
                                     @endphp
@@ -601,13 +601,13 @@
                         @forelse($report as $row)
                             @php
                                 $statusColors = [
-                                    'PRESENT' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
-                                    'LATE' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
-                                    'ABSENT' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);',
-                                    'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
-                                    'Late' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
-                                    'Absent' => 'background-color:rgba(107, 114, 128, 0.1); color:#475569; border:1px solid rgba(107, 114, 128, 0.35);'
-                                ];
+                                                                    'PRESENT' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
+                                                                    'LATE' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
+                                                                    'ABSENT' => 'background-color:rgba(239, 68, 68, 0.1); color:#dc2626; border:1px solid rgba(239, 68, 68, 0.35);',
+                                                                    'Present' => 'background-color:rgba(16, 185, 129, 0.1); color:#047857; border:1px solid rgba(16, 185, 129, 0.35);',
+                                                                    'Late' => 'background-color:rgba(217, 119, 6, 0.1); color:#d97706; border:1px solid rgba(217, 119, 6, 0.35);',
+                                                                    'Absent' => 'background-color:rgba(239, 68, 68, 0.1); color:#dc2626; border:1px solid rgba(239, 68, 68, 0.35);'
+                                                                ];
                                 $colorStyle = $statusColors[$row['status']] ?? 'background-color:rgba(107, 114, 128, 0.1); color:#475569;';
                             @endphp
                             <tr style="border-bottom:1px solid var(--s-border); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--s-surface-hover)'" onmouseout="this.style.backgroundColor='transparent'">
