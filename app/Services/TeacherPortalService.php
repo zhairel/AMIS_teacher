@@ -379,6 +379,43 @@ class TeacherPortalService
     private function subjectsFor(Request $request): Collection
     {
         $context = (string) $request->session()->get('teacher_academic_context');
+        $teacherEmail = $request->session()->get('teacher_email');
+
+        if ($teacherEmail === 'sir_monlingasa@amis.edu.ph') {
+            $sectionSubjects = SectionSubject::with('section')->get();
+            $subjects = $sectionSubjects->map(function (SectionSubject $sectionSubject) {
+                $subjectName = $sectionSubject->subject_name;
+                $gradeLevel = $sectionSubject->section?->grade_level;
+
+                $catalogSubject = Subject::where('name', $subjectName)
+                    ->where('grade_level', $gradeLevel)
+                    ->first();
+
+                if (! $catalogSubject) {
+                    $catalogSubject = Subject::where('name', $subjectName)->first();
+                }
+
+                return $this->sectionSubjectArray($sectionSubject, $catalogSubject);
+            });
+
+            $sectionSubjectNames = $sectionSubjects->pluck('subject_name')->map(fn($n) => strtolower($n))->unique();
+            $catalogSubjects = Subject::get()->reject(fn($s) => $sectionSubjectNames->contains(strtolower($s->name)))
+                ->map(fn($s) => $this->catalogSubjectArray($s));
+
+            $subjects = $subjects->concat($catalogSubjects)->unique('id')->values();
+
+            if (str_starts_with($context, 'subject:')) {
+                $subjectId = (int) Str::after($context, 'subject:');
+                $subjects = $subjects->where('subject_id', $subjectId)->values();
+            }
+
+            if (str_starts_with($context, 'adviser:')) {
+                return collect();
+            }
+
+            return $subjects;
+        }
+
         if (str_starts_with($context, 'adviser:')) {
             return collect();
         }
@@ -450,6 +487,19 @@ class TeacherPortalService
     public function advisorySectionsFor(Request $request): Collection
     {
         $context = (string) $request->session()->get('teacher_academic_context');
+        $teacherEmail = $request->session()->get('teacher_email');
+
+        if ($teacherEmail === 'sir_monlingasa@amis.edu.ph') {
+            $sectionIds = Section::pluck('id')->unique();
+            if (str_starts_with($context, 'adviser:')) {
+                $sectionIds = $sectionIds->intersect([(int) Str::after($context, 'adviser:')]);
+            }
+            if (str_starts_with($context, 'subject:')) {
+                return collect();
+            }
+            return $sectionIds;
+        }
+
         if (str_starts_with($context, 'subject:')) {
             return collect();
         }
@@ -512,6 +562,26 @@ class TeacherPortalService
         $teacherKey = $this->teacherKey($request);
         $teacherEmail = $request->session()->get('teacher_email');
         $teacherName = $request->session()->get('teacher_name');
+
+        if ($teacherEmail === 'sir_monlingasa@amis.edu.ph') {
+            $subjectAssignments = Subject::orderBy('grade_level')->orderBy('name')->get()
+                ->unique(fn ($s) => $s->name . ' · ' . $s->grade_level)
+                ->map(fn ($subject) => [
+                    'key' => 'subject:'.$subject->id,
+                    'type' => 'subject',
+                    'label' => $subject->name.($subject->grade_level ? ' · '.$subject->grade_level : ''),
+                ]);
+
+            $advisoryAssignments = Section::orderBy('grade_level')->orderBy('name')->get()
+                ->map(fn ($section) => [
+                    'key' => 'adviser:'.$section->id,
+                    'type' => 'adviser',
+                    'label' => 'Adviser · '.$section->section_title,
+                ]);
+
+            return $subjectAssignments->concat($advisoryAssignments)->values();
+        }
+
         $subjectAssignments = TeacherSubjectAssignment::with('subject')
             ->where('status', 'active')
             ->where(function ($query) use ($teacherKey, $teacherEmail) {
