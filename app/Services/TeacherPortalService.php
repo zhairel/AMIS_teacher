@@ -625,10 +625,64 @@ class TeacherPortalService
         $subjectSectionIds = $subjects->pluck('section_id')->filter()->unique();
         $allSectionIds = $subjectSectionIds->concat($advisorySectionIds)->unique();
 
-        return StudentSection::with(['student.user', 'student.applicant'])
+        $sections = Section::whereIn('id', $allSectionIds)->get()->keyBy('id');
+
+        $studentSections = StudentSection::with(['student.user', 'student.applicant'])
             ->whereIn('section_id', $allSectionIds)
-            ->get()
-            ->flatMap(function ($row) use ($subjects, $advisorySectionIds) {
+            ->get();
+
+        // For any section that has 0 student_sections, let's dynamically fetch matching students
+        $dynamicRows = collect();
+        foreach ($allSectionIds as $sectionId) {
+            $hasStudents = $studentSections->contains('section_id', $sectionId);
+            if (!$hasStudents) {
+                $section = $sections[$sectionId] ?? null;
+                if ($section) {
+                    $query = \App\Models\Student::with(['user', 'applicant'])
+                        ->where('grade_level', $section->grade_level);
+
+                    if (str_contains($section->learning_mode ?? '', 'Face') || str_contains($section->learning_mode ?? '', 'f2f')) {
+                        $query->whereHas('applicant', function ($q) {
+                            $q->where('learning_mode', 'like', '%Face%')
+                              ->orWhere('learning_mode', 'like', '%f2f%');
+                        });
+                    } else {
+                        $query->whereHas('applicant', function ($q) use ($section) {
+                            $q->where(function ($sub) {
+                                $sub->where('learning_mode', 'like', '%Online%')
+                                    ->orWhere('learning_mode', 'like', '%Flexible%');
+                            });
+                            if ($section->shift) {
+                                $q->where('learning_mode', 'like', '%' . $section->shift . '%');
+                            }
+                        });
+                    }
+
+                    if ($section->gender === 'male') {
+                        $query->whereHas('applicant', function ($q) {
+                            $q->where('gender', 'like', 'male%');
+                        });
+                    } elseif ($section->gender === 'female') {
+                        $query->whereHas('applicant', function ($q) {
+                            $q->where('gender', 'like', 'female%');
+                        });
+                    }
+
+                    $matchingStudents = $query->get();
+                    foreach ($matchingStudents as $student) {
+                        $row = new StudentSection();
+                        $row->student_id = $student->id;
+                        $row->section_id = $sectionId;
+                        $row->setRelation('student', $student);
+                        $dynamicRows->push($row);
+                    }
+                }
+            }
+        }
+
+        $allRows = $studentSections->concat($dynamicRows);
+
+        return $allRows->flatMap(function ($row) use ($subjects, $advisorySectionIds) {
                 $base = [
                     'id' => $row->student_id,
                     'section_id' => $row->section_id,
@@ -639,15 +693,11 @@ class TeacherPortalService
                     'photo_url' => EnrollmentStorage::url($row->student?->applicant?->photo_2x2_url),
                 ];
 
-                // A learner must appear in every subject workspace assigned to
-                // the teacher, not only the first subject found for a section.
                 $subjectRows = $subjects
                     ->where('section_id', $row->section_id)
                     ->whereNotNull('section_subject_id')
                     ->map(fn ($subject) => $base + ['section_subject_id' => $subject['section_subject_id']]);
 
-                // Keep an adviser-only roster entry even when the adviser has
-                // no subject assignment for this section.
                 if ($subjectRows->isEmpty() && $advisorySectionIds->contains($row->section_id)) {
                     return [$base + ['section_subject_id' => null]];
                 }
