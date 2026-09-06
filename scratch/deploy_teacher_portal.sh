@@ -4,7 +4,7 @@ set -e
 REMOTE_USER="amisdavc"
 REMOTE_HOST="50.87.224.105"
 REMOTE_PORT="2222"
-REMOTE_PATH="/home2/amisdavc/teacher.amis.edu.ph"
+REMOTE_PATH="/home2/amisdavc/faculty.amis.edu.ph"
 ARCHIVE_NAME="teacher_portal_deploy.tar.gz"
 
 echo "Bundling updated teacher portal files..."

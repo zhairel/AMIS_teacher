@@ -195,6 +195,45 @@ class TeacherPortalService
                 );
             }
         }
+
+        // Synchronize with official Grade records
+        $schoolYear = config('services.school.year', '2026-2027');
+        $allAssessments = GradebookAssessment::where('section_subject_id', $subject['section_subject_id'])->get();
+
+        foreach (array_keys($studentScores) as $studentId) {
+            $studentScoresRows = GradebookScore::whereIn('assessment_id', $allAssessments->pluck('id'))
+                ->where('student_id', (int) $studentId)
+                ->whereNotNull('score')
+                ->get();
+
+            $percentages = [];
+            foreach ($studentScoresRows as $sc) {
+                $ass = $allAssessments->firstWhere('id', $sc->assessment_id);
+                if ($ass && $ass->max_score > 0) {
+                    $percentages[] = ((float) $sc->score / (float) $ass->max_score) * 100;
+                }
+            }
+
+            $computedAvg = !empty($percentages) ? round(array_sum($percentages) / count($percentages), 2) : null;
+            $remarks = !is_null($computedAvg) ? ($computedAvg >= 75 ? 'Passed' : 'Failed') : 'Ongoing';
+
+            \App\Models\Grade::updateOrCreate(
+                [
+                    'student_id' => (int) $studentId,
+                    'section_subject_id' => $subject['section_subject_id'],
+                    'grading_period' => '1st Quarter',
+                    'school_year' => $schoolYear,
+                ],
+                [
+                    'subject_id' => $subject['subject_id'] ?? null,
+                    'quarter_grade' => $computedAvg,
+                    'remarks' => $remarks,
+                    'status' => 'draft',
+                    'encoded_by' => $request->user()?->id,
+                ]
+            );
+        }
+
         $this->audit($request, $subject['section_subject_id'], 'scores_saved');
     }
 
@@ -209,6 +248,16 @@ class TeacherPortalService
             ['section_subject_id' => $subject['section_subject_id'], 'grading_period' => 'Current'],
             ['teacher_key' => $this->teacherKey($request), 'status' => 'submitted', 'submitted_at' => now(), 'review_notes' => null]
         );
+
+        $schoolYear = config('services.school.year', '2026-2027');
+        \App\Models\Grade::where('section_subject_id', $subject['section_subject_id'])
+            ->where('grading_period', '1st Quarter')
+            ->where('school_year', $schoolYear)
+            ->update([
+                'status' => 'submitted',
+                'submitted_at' => now(),
+            ]);
+
         $this->audit($request, $subject['section_subject_id'], 'grades_submitted', 'submission', $submission->id);
         return $submission;
     }
@@ -435,9 +484,15 @@ class TeacherPortalService
             ->get();
 
         $sectionSubjects = SectionSubject::with('section')
-            ->where(function ($query) use ($teacherName) {
+            ->where(function ($query) use ($teacherName, $teacherEmail, $teacherKey) {
                 $query->where('teacher_name', $teacherName)
                     ->orWhere('teacher_name', 'like', '%'.trim((string) $teacherName).'%');
+                if ($teacherEmail) {
+                    $query->orWhere('teacher_email', $teacherEmail);
+                }
+                if ($teacherKey) {
+                    $query->orWhere('teacher_key', $teacherKey);
+                }
             })
             ->get();
 

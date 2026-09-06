@@ -12,6 +12,14 @@ class AttendanceController extends Controller
     public function __construct(private ZKTecoParser $parser) {}
 
     /**
+     * Show Real-Time Live Attendance Coming Soon page
+     */
+    public function live()
+    {
+        return view('teacher.attendance.live');
+    }
+
+    /**
      * Display Attendance Dashboard & Report
      */
     public function index(Request $request)

@@ -38,6 +38,7 @@
                     ['route' => 'teacher.students', 'icon' => 'users', 'label' => 'Students', 'tone' => 'violet'],
                     ['route' => 'teacher.announcements', 'icon' => 'megaphone', 'label' => 'Announcements', 'tone' => 'rose'],
                     ['route' => 'teacher.attendance', 'icon' => 'clock', 'label' => 'Attendance', 'tone' => 'emerald'],
+                    ['route' => 'teacher.attendance.live', 'icon' => 'activity', 'label' => 'Live Attendance', 'tone' => 'rose'],
                     ['route' => 'teacher.id', 'icon' => 'id-card', 'label' => 'Digital ID', 'tone' => 'teal'],
                     ['route' => 'teacher.settings', 'icon' => 'settings', 'label' => 'Settings', 'tone' => 'indigo'],
                 ];

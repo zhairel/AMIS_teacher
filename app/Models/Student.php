@@ -17,4 +17,14 @@ class Student extends Model
     {
         return $this->belongsTo(EnrollmentApplicant::class, 'enrollment_applicant_id');
     }
+
+    public function grades()
+    {
+        return $this->hasMany(Grade::class);
+    }
+
+    public function approvedGrades()
+    {
+        return $this->hasMany(Grade::class)->whereIn('status', ['approved', 'published']);
+    }
 }

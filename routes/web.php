@@ -16,6 +16,7 @@ Route::middleware('guest')->group(function () {
 
 // Public ZKTeco Attendance Parser & Report
 Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'index'])->name('teacher.attendance');
+Route::get('/attendance/live', [App\Http\Controllers\AttendanceController::class, 'live'])->name('teacher.attendance.live');
 Route::post('/attendance/import', [App\Http\Controllers\AttendanceController::class, 'import'])->name('teacher.attendance.import');
 Route::post('/attendance/users', [App\Http\Controllers\AttendanceController::class, 'storeUser'])->name('teacher.attendance.users.store');
 Route::post('/attendance/users/{id}/delete', [App\Http\Controllers\AttendanceController::class, 'deleteUser'])->name('teacher.attendance.users.delete');
